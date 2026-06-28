@@ -128,7 +128,7 @@
       outline: none;
     }
     .download-btn { right: 8px; }
-    .bookmark-btn { left: 8px; display: none; } /* по умолчанию скрыта */
+    .bookmark-btn { left: 8px; display: none; }
     .download-btn:hover, .bookmark-btn:hover { background: rgba(214,51,108,0.8); }
     .bookmark-btn.bookmarked { background: #d6336c; border-color: #d6336c; }
 
@@ -210,7 +210,7 @@
   <!-- Модалка личного кабинета -->
   <div class="cabinet-modal" id="cabinetModal">
     <div class="cabinet-content">
-      <h2>🔖 Мои закладки (только видео) 
+      <h2>🔖 Мои закладки (только видео)
         <button class="cabinet-close" id="closeCabinetBtn">&times;</button>
       </h2>
       <div class="cabinet-grid" id="cabinetGrid"></div>
@@ -222,7 +222,7 @@
 
   <script>
   (function() {
-    // Обновлённые списки: mix — максимум фото, porno — только видео-сабы
+    // Расширенные списки: mix 60+, porno 35+
     const CHANNELS = {
       mix: [
         'GoneWild','RealGirls','Nude_Selfie','PetiteGoneWild','BustyPetite','AltGirls','altgonewild','gothsluts','emogirls','tattoo',
@@ -232,23 +232,29 @@
         'FineArtNudes','TheFemaleForm','goddesses','ElegantNudes','NudeArt','ArtisticNudes','WomenInArt','erotica','sensualnudes',
         'TotalBabes','BeautifulWomen','PrettyGirlsNSFW','FitNakedGirls','AthleticBabes','assholebehindthong','boobs','tits',
         'NakedGirls','NudesGoneWild','GlamourNudes',
-        // Новые: вебкам, 18-19 лет, альтухи
         'CamGirls','LiveCamBabes','WebcamGirlsNSFW','CamSluts','Chaturbates','just18','barelylegal','YoungGirlsGoneWild',
         'TeensGoneWild','TeenGirls','CollegeGirlsNSFW','AmateurTeens','AltBoobWorld','GothGirls','PunkGirls','EmoGirlsNSFW',
-        'TattooGirls','PiercedNSFW','AltGirlsNSFW','PunkGirlsNSFW'
+        'TattooGirls','PiercedNSFW','AltGirlsNSFW','PunkGirlsNSFW',
+        'HighResNSFW','ArtisticNudes','EroticLuxury','ClassyPorn','NSFW_Photography','BoudoirPhotography',
+        'HentaiArt','Hentai','AnimeNudes','Ecchi'
       ],
       porno: [
         'NSFW_GIF','porn_gifs','nsfw_gif','porninfifteenseconds','60fpsporn','nsfw_html5','adultgifs','hardcore','porn','nsfw',
         'cumsluts','LegalTeens','Blowjobs','deepthroat','anal','creampie','pussy','ass','pornvids','PornStarHQ','PornStars',
-        'BigBoobsGW','BustyNatural','TinyTits','NudeSelfie','OralCreampie','roughsex','passionx','bdsm','bondage','pornID'
+        'BigBoobsGW','BustyNatural','TinyTits','NudeSelfie','OralCreampie','roughsex','passionx','bdsm','bondage','pornID',
+        'HighQualityGifs','PornStarHQ','PornStars','PornStarHQ'
       ]
     };
 
+    // Жёсткий фильтр: жесть, фембои, трансы
     const BLOCKED_WORDS = [
       'gore', 'blood', 'kill', 'murder', 'death', 'dead', 'dying', 'violen', 'gun', 'knife', 'weapon',
       'shooting', 'stab', 'torture', 'abuse', 'corpse', 'autopsy', 'beheading', 'pain', 'suffer',
       'убийств', 'смерт', 'насил', 'кров', 'труп', 'жесток', 'оружи', 'нож', 'пистолет', 'расстрел',
-      'драк', 'избиен', 'ужас', 'жутк', 'жутко', 'убийц'
+      'драк', 'избиен', 'ужас', 'жутк', 'жутко', 'убийц',
+      'femboy', 'trap', 'transgender', 'trans', 'shemale', 'ladyboy', 'futanari', 'dickgirl', 'tranny',
+      'boypussy', 'femboys', 'traps', 'genderbend', 'crossdress', 'sissy', 'фембой', 'транс', 'трап',
+      'шимари', 'ледибой', 'фута', 'футанари', 'кроссдресс', 'сисси'
     ];
 
     function isBlockedContent(title, subreddit) {
@@ -257,7 +263,7 @@
     }
 
     let currentChannel = 'mix';
-    const STORAGE_KEY = 'liquid_feed_final_v6';
+    const STORAGE_KEY = 'liquid_feed_final_v7';
     const SEEN_MAX = 10000;
     const MAX_DOM_CARDS = 40;
     const RECENT_SUB_LIMIT = 15;
@@ -270,7 +276,7 @@
       recentSubs: [],
       searchAfter: null,
       mode: 'auto',
-      bookmarks: []  // только для видео
+      bookmarks: []
     };
 
     try {
@@ -442,9 +448,27 @@
       if (data.is_video) return true;
       if (data.domain === 'i.imgur.com' && data.url && data.url.endsWith('.gifv')) return true;
       if (data.domain === 'redgifs.com' || data.domain === 'www.redgifs.com') return true;
-      // проверка по расширению видео
       if (data.url && data.url.match(/\.(mp4|webm|mov)(\?.*)?$/i)) return true;
       return false;
+    }
+
+    function getVideoInfo(data) {
+      if (data.is_video && data.media?.reddit_video?.fallback_url) {
+        return { type: 'reddit', videoUrl: data.media.reddit_video.fallback_url, thumbnail: data.thumbnail };
+      }
+      if (data.domain === 'i.imgur.com' && data.url?.endsWith('.gifv')) {
+        return { type: 'imgur', videoUrl: data.url.replace(/\.gifv$/, '.mp4'), thumbnail: data.thumbnail || data.url.replace(/\.gifv$/, '.jpg') };
+      }
+      if (data.domain === 'redgifs.com' || data.domain === 'www.redgifs.com') {
+        const match = data.url.match(/\/watch\/([a-zA-Z0-9]+)/);
+        if (match) {
+          return { type: 'redgifs', videoUrl: `https://www.redgifs.com/ifr/${match[1]}`, thumbnail: `https://thumbs2.redgifs.com/${match[1]}-mobile.jpg` };
+        }
+      }
+      if (data.url?.match(/\.(mp4|webm|mov)(\?.*)?$/i)) {
+        return { type: 'direct', videoUrl: data.url, thumbnail: data.thumbnail };
+      }
+      return null;
     }
 
     function toggleBookmark(bookmarkData) {
@@ -452,11 +476,11 @@
       if (index > -1) {
         state.bookmarks.splice(index, 1);
         saveState();
-        return false; // удалено
+        return false;
       } else {
         state.bookmarks.unshift(bookmarkData);
         saveState();
-        return true; // добавлено
+        return true;
       }
     }
 
@@ -465,17 +489,13 @@
     }
 
     function createBookmarkData(data) {
+      const videoInfo = getVideoInfo(data);
       return {
         id: data.id,
         title: data.title || '',
-        url: data.url,
-        domain: data.domain,
         subreddit: data.subreddit,
         permalink: data.permalink,
-        is_video: data.is_video,
-        media: data.media ? { reddit_video: { fallback_url: data.media.reddit_video?.fallback_url } } : null,
-        thumbnail: data.thumbnail,
-        preview: data.media?.reddit_video?.fallback_url || data.url
+        ...videoInfo
       };
     }
 
@@ -491,7 +511,6 @@
       if (state.seenPosts.has(postId) || (url && state.seenUrls.has(url))) return null;
       if (isBlockedContent(title, subreddit)) return null;
 
-      // Фильтр для канала "porno" — только видео
       if (currentChannel === 'porno' && !isVideoPost(data)) return null;
 
       const tags = extractTags(title, subreddit);
@@ -580,7 +599,7 @@
 
       card.appendChild(mediaElement);
 
-      // Флажок закладки показываем только для видео
+      // Флажок закладки только для видео
       if (isVideoPost(data)) {
         const bookmarkBtn = document.createElement('button');
         bookmarkBtn.className = 'bookmark-btn';
@@ -688,23 +707,11 @@
       state.bookmarks.forEach(bm => {
         const card = document.createElement('div');
         card.className = 'cabinet-card';
-        const isVideo = bm.is_video || (bm.url && bm.url.match(/\.(mp4|webm|gifv)/i));
-        const thumb = bm.thumbnail || (bm.media?.reddit_video?.fallback_url);
-        const previewUrl = bm.preview || bm.url;
-        if (isVideo && thumb) {
-          const img = document.createElement('img');
-          img.src = thumb;
-          img.alt = bm.title;
-          card.appendChild(img);
-        } else if (isVideo) {
-          const vid = document.createElement('video');
-          vid.src = previewUrl; vid.muted = true; vid.preload = 'metadata';
-          card.appendChild(vid);
-        } else {
-          const img = document.createElement('img');
-          img.src = previewUrl; img.alt = bm.title;
-          card.appendChild(img);
-        }
+        const thumb = bm.thumbnail || '';
+        const img = document.createElement('img');
+        img.src = thumb;
+        img.alt = bm.title;
+        card.appendChild(img);
         const cap = document.createElement('div');
         cap.className = 'caption'; cap.textContent = bm.title || 'Без названия';
         card.appendChild(cap);
@@ -716,10 +723,40 @@
           renderBookmarksCabinet();
         });
         card.appendChild(removeBtn);
+
+        // При клике на карточку — встроить плеер
         card.addEventListener('click', () => {
-          if (bm.permalink) window.open('https://www.reddit.com' + bm.permalink, '_blank');
-          else window.open(bm.url, '_blank');
+          if (card.querySelector('video, iframe')) return; // уже играет
+          // Очищаем и вставляем плеер
+          card.innerHTML = '';
+          const removeBtn2 = document.createElement('button');
+          removeBtn2.className = 'remove-btn'; removeBtn2.innerHTML = '&times;';
+          removeBtn2.addEventListener('click', (e) => {
+            e.stopPropagation();
+            toggleBookmark(bm);
+            renderBookmarksCabinet();
+          });
+          card.appendChild(removeBtn2);
+
+          if (bm.type === 'redgifs') {
+            const iframe = document.createElement('iframe');
+            iframe.src = bm.videoUrl;
+            iframe.allowFullscreen = true;
+            iframe.allow = 'autoplay; fullscreen';
+            iframe.referrerPolicy = 'no-referrer';
+            iframe.style.width = '100%'; iframe.style.aspectRatio = '16/9';
+            card.appendChild(iframe);
+          } else {
+            const video = document.createElement('video');
+            video.src = bm.videoUrl;
+            video.controls = true;
+            video.playsInline = true;
+            video.style.width = '100%'; video.style.height = 'auto';
+            video.play();
+            card.appendChild(video);
+          }
         });
+
         grid.appendChild(card);
       });
     }
@@ -728,7 +765,6 @@
       const feed = document.getElementById('feed');
       if (clear) feed.innerHTML = '';
 
-      // Фильтрация для porno уже внутри createCard, но для верности ещё раз
       let filtered = posts;
       if (currentChannel === 'porno') {
         filtered = posts.filter(p => isVideoPost(p.data));
