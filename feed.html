@@ -150,6 +150,7 @@
   <div class="channels" id="channels">
     <button class="channel-btn active" data-channel="mix">🔥 Лента</button>
     <button class="channel-btn" data-channel="porno">🎬 Порно</button>
+    <button class="channel-btn" data-channel="random">🌐 Случайный NSFW</button>
   </div>
 
   <div class="mode-toggle" id="modeToggle" role="button" aria-label="Переключить режим">
@@ -177,18 +178,22 @@
       ],
       porno: [
         'NSFW_GIF','porn_gifs','nsfw_gif','porninfifteenseconds','60fpsporn','nsfw_html5','adultgifs','hardcore','porn','nsfw','cumsluts','LegalTeens','Blowjobs','deepthroat','anal','creampie','pussy','ass','pornvids'
-      ]
+      ],
+      random: []  // будет использоваться r/randnsfw
     };
 
     let currentChannel = 'mix';
-    const STORAGE_KEY = 'liquid_feed_final_v2';
-    const SEEN_MAX = 3000;
+    const STORAGE_KEY = 'liquid_feed_final_v3';
+    const SEEN_MAX = 10000;
     const MAX_DOM_CARDS = 40;
+    const RECENT_SUB_LIMIT = 15;
 
     let state = {
       subWeights: {},
       tagWeights: {},
       seenPosts: new Set(),
+      seenUrls: new Set(),
+      recentSubs: [],
       searchAfter: null,
       mode: 'auto'
     };
@@ -200,6 +205,8 @@
         state.subWeights = saved.subWeights || {};
         state.tagWeights = saved.tagWeights || {};
         if (saved.seenPosts) saved.seenPosts.forEach(id => state.seenPosts.add(id));
+        if (saved.seenUrls) saved.seenUrls.forEach(url => state.seenUrls.add(url));
+        if (saved.recentSubs) state.recentSubs = saved.recentSubs;
         if (saved.mode) state.mode = saved.mode;
       }
     } catch (e) {}
@@ -209,21 +216,28 @@
         subWeights: state.subWeights,
         tagWeights: state.tagWeights,
         seenPosts: Array.from(state.seenPosts).slice(-SEEN_MAX),
+        seenUrls: Array.from(state.seenUrls).slice(-SEEN_MAX),
+        recentSubs: state.recentSubs.slice(-RECENT_SUB_LIMIT * 2),
         mode: state.mode
       };
       localStorage.setItem(STORAGE_KEY, JSON.stringify(toSave));
     }
 
-    function markSeen(postId) {
+    function markSeen(postId, url) {
       state.seenPosts.add(postId);
+      if (url) state.seenUrls.add(url);
       if (state.seenPosts.size > SEEN_MAX) {
         const iter = state.seenPosts.values();
         for (let i = 0; i < state.seenPosts.size - SEEN_MAX; i++) state.seenPosts.delete(iter.next().value);
       }
+      if (state.seenUrls.size > SEEN_MAX) {
+        const iter = state.seenUrls.values();
+        for (let i = 0; i < state.seenUrls.size - SEEN_MAX; i++) state.seenUrls.delete(iter.next().value);
+      }
     }
 
     function recordFeedback(postId, subreddit, tags, liked) {
-      markSeen(postId);
+      // пост уже помечен как просмотренный при создании карточки
       if (!state.subWeights[subreddit]) state.subWeights[subreddit] = { likes: 0, dislikes: 0 };
       liked ? state.subWeights[subreddit].likes++ : state.subWeights[subreddit].dislikes++;
       tags.forEach(tag => {
@@ -234,11 +248,24 @@
     }
 
     function selectNextSub() {
+      if (currentChannel === 'random') {
+        return null; // обрабатывается в loadAuto
+      }
       const candidates = CHANNELS[currentChannel] || CHANNELS.mix;
-      return candidates[Math.floor(Math.random() * candidates.length)];
+      let available = candidates.filter(sub => !state.recentSubs.includes(sub));
+      if (available.length === 0) {
+        state.recentSubs = [];
+        available = [...candidates];
+      }
+      const pick = available[Math.floor(Math.random() * available.length)];
+      state.recentSubs.push(pick);
+      if (state.recentSubs.length > RECENT_SUB_LIMIT) {
+        state.recentSubs.shift();
+      }
+      saveState();
+      return pick;
     }
 
-    // JSONP с fallback и случайным параметром для предотвращения кеширования
     function jsonp(path, callbackName, timeoutMs = 15000) {
       return new Promise((resolve, reject) => {
         const bases = ['https://www.reddit.com', 'https://old.reddit.com'];
@@ -317,7 +344,6 @@
       return [...new Set(tags)];
     }
 
-    // Скачивание фото через canvas (гарантированно, без CORS)
     function downloadImage(imgElement, filename) {
       const canvas = document.createElement('canvas');
       canvas.width = imgElement.naturalWidth;
@@ -336,7 +362,6 @@
       }, 'image/jpeg', 0.95);
     }
 
-    // Скачивание видео – невозможно без сервера, открываем в новой вкладке
     function downloadVideo(url) {
       window.open(url, '_blank');
     }
@@ -350,7 +375,7 @@
       const subreddit = data.subreddit;
       const postId = data.id;
 
-      if (state.seenPosts.has(postId)) return null;
+      if (state.seenPosts.has(postId) || (url && state.seenUrls.has(url))) return null;
 
       const tags = extractTags(title, subreddit);
       const card = document.createElement('div');
@@ -363,7 +388,6 @@
       let downloadUrl = null;
       let isImage = false;
 
-      // Reddit видео
       if (data.is_video && data.media && data.media.reddit_video) {
         const fallback = data.media.reddit_video.fallback_url;
         const thumbnail = (data.thumbnail && data.thumbnail !== 'self' && data.thumbnail !== 'default') ? data.thumbnail : '';
@@ -408,7 +432,6 @@
           }
         });
       }
-      // Imgur gifv -> mp4
       else if (url && domain === 'i.imgur.com' && url.endsWith('.gifv')) {
         const mp4Url = url.replace(/\.gifv$/, '.mp4');
         downloadUrl = mp4Url;
@@ -419,7 +442,6 @@
         mediaElement.playsInline = true;
         mediaElement.preload = 'metadata';
       }
-      // RedGIFs
       else if (domain === 'redgifs.com' || domain === 'www.redgifs.com') {
         const match = url.match(/\/watch\/([a-zA-Z0-9]+)/);
         if (match) {
@@ -430,7 +452,7 @@
           preview.alt = title || 'RedGIFs';
           preview.loading = 'lazy';
           downloadUrl = preview.src;
-          isImage = true; // превью – изображение
+          isImage = true;
           wrapper.appendChild(preview);
           wrapper.addEventListener('click', () => {
             const iframe = document.createElement('iframe');
@@ -446,7 +468,6 @@
           mediaElement = wrapper;
         }
       }
-      // Изображения
       else if (url && (url.match(/\.(jpg|jpeg|png|gif|webp)(\?.*)?$/i) || domain === 'i.redd.it' || domain === 'i.imgur.com')) {
         downloadUrl = url;
         isImage = true;
@@ -460,7 +481,6 @@
 
       card.appendChild(mediaElement);
 
-      // Кнопка "Скачать" – умное поведение
       if (downloadUrl) {
         const downloadBtn = document.createElement('button');
         downloadBtn.className = 'download-btn';
@@ -469,14 +489,12 @@
           e.stopPropagation();
           e.preventDefault();
           if (isImage) {
-            // Для картинок – сохраняем через canvas
             const img = mediaElement.tagName === 'IMG' ? mediaElement : mediaElement.querySelector('img');
             if (img && img.complete && img.naturalWidth > 0) {
               const ext = downloadUrl.split('.').pop().split('?')[0] || 'jpg';
               const filename = (title || 'image').replace(/[^a-z0-9]/gi, '_').substring(0, 30) + '.' + ext;
               downloadImage(img, filename);
             } else {
-              // если изображение ещё не загружено, ждём и пробуем снова
               const tempImg = new Image();
               tempImg.crossOrigin = 'anonymous';
               tempImg.src = downloadUrl;
@@ -490,7 +508,6 @@
               };
             }
           } else {
-            // Для видео – открываем в новой вкладке
             downloadVideo(downloadUrl);
           }
         });
@@ -542,7 +559,7 @@
       actions.appendChild(dislikeBtn);
       card.appendChild(actions);
 
-      markSeen(postId);
+      markSeen(postId, url);
       saveState();
 
       return card;
@@ -612,8 +629,14 @@
       loader.innerHTML = '<div class="skeleton"></div>';
 
       try {
-        const sub = selectNextSub();
-        const path = `/r/${sub}/hot.json?limit=12`;
+        let path;
+        if (currentChannel === 'random') {
+          path = '/r/randnsfw/hot.json?limit=12';
+        } else {
+          const sub = selectNextSub();
+          path = `/r/${sub}/hot.json?limit=12`;
+        }
+
         const json = await jsonp(path, 'redditCallback');
         const posts = json.data.children;
         appendCards(posts, false);
