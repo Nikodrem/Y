@@ -150,7 +150,6 @@
   <div class="channels" id="channels">
     <button class="channel-btn active" data-channel="mix">🔥 Лента</button>
     <button class="channel-btn" data-channel="porno">🎬 Порно</button>
-    <button class="channel-btn" data-channel="random">🌐 Случайный NSFW</button>
   </div>
 
   <div class="mode-toggle" id="modeToggle" role="button" aria-label="Переключить режим">
@@ -169,6 +168,7 @@
 
   <script>
   (function() {
+    // Проверенные списки: только девушки и порно
     const CHANNELS = {
       mix: [
         'GoneWild','RealGirls','Nude_Selfie','PetiteGoneWild','BustyPetite','AltGirls','altgonewild','gothsluts','emogirls','tattoo',
@@ -178,12 +178,24 @@
       ],
       porno: [
         'NSFW_GIF','porn_gifs','nsfw_gif','porninfifteenseconds','60fpsporn','nsfw_html5','adultgifs','hardcore','porn','nsfw','cumsluts','LegalTeens','Blowjobs','deepthroat','anal','creampie','pussy','ass','pornvids'
-      ],
-      random: []  // будет использоваться r/randnsfw
+      ]
     };
 
+    // Жёсткий фильтр: слова, которых не должно быть в заголовках или названиях сабреддитов
+    const BLOCKED_WORDS = [
+      'gore', 'blood', 'kill', 'murder', 'death', 'dead', 'dying', 'violen', 'gun', 'knife', 'weapon',
+      'shooting', 'stab', 'torture', 'abuse', 'corpse', 'autopsy', 'beheading', 'pain', 'suffer',
+      'убийств', 'смерт', 'насил', 'кров', 'труп', 'жесток', 'оружи', 'нож', 'пистолет', 'расстрел',
+      'драк', 'избиен', 'ужас', 'жутк', 'жутко', 'убийц'
+    ];
+
+    function isBlockedContent(title, subreddit) {
+      const combined = (title + ' ' + subreddit).toLowerCase();
+      return BLOCKED_WORDS.some(word => combined.includes(word));
+    }
+
     let currentChannel = 'mix';
-    const STORAGE_KEY = 'liquid_feed_final_v3';
+    const STORAGE_KEY = 'liquid_feed_final_v4';
     const SEEN_MAX = 10000;
     const MAX_DOM_CARDS = 40;
     const RECENT_SUB_LIMIT = 15;
@@ -237,7 +249,6 @@
     }
 
     function recordFeedback(postId, subreddit, tags, liked) {
-      // пост уже помечен как просмотренный при создании карточки
       if (!state.subWeights[subreddit]) state.subWeights[subreddit] = { likes: 0, dislikes: 0 };
       liked ? state.subWeights[subreddit].likes++ : state.subWeights[subreddit].dislikes++;
       tags.forEach(tag => {
@@ -248,9 +259,6 @@
     }
 
     function selectNextSub() {
-      if (currentChannel === 'random') {
-        return null; // обрабатывается в loadAuto
-      }
       const candidates = CHANNELS[currentChannel] || CHANNELS.mix;
       let available = candidates.filter(sub => !state.recentSubs.includes(sub));
       if (available.length === 0) {
@@ -376,6 +384,9 @@
       const postId = data.id;
 
       if (state.seenPosts.has(postId) || (url && state.seenUrls.has(url))) return null;
+
+      // Фильтрация запрещённого контента
+      if (isBlockedContent(title, subreddit)) return null;
 
       const tags = extractTags(title, subreddit);
       const card = document.createElement('div');
@@ -629,14 +640,8 @@
       loader.innerHTML = '<div class="skeleton"></div>';
 
       try {
-        let path;
-        if (currentChannel === 'random') {
-          path = '/r/randnsfw/hot.json?limit=12';
-        } else {
-          const sub = selectNextSub();
-          path = `/r/${sub}/hot.json?limit=12`;
-        }
-
+        const sub = selectNextSub();
+        const path = `/r/${sub}/hot.json?limit=12`;
         const json = await jsonp(path, 'redditCallback');
         const posts = json.data.children;
         appendCards(posts, false);
