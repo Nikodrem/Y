@@ -1,0 +1,728 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+  <title>🔥 Персональная лента v2.0</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #0a0a0a;
+      color: #eee;
+      font-family: 'Segoe UI', Roboto, system-ui, sans-serif;
+      overscroll-behavior: contain;
+      min-height: 100vh;
+    }
+
+    header {
+      position: sticky; top: 0; z-index: 10;
+      background: rgba(20, 20, 25, 0.7);
+      backdrop-filter: blur(20px) saturate(180%);
+      -webkit-backdrop-filter: blur(20px) saturate(180%);
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+      text-align: center;
+      padding: 1.2rem 1rem 0.8rem;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+    }
+    header h1 {
+      font-weight: 300;
+      letter-spacing: 4px;
+      color: #f0a0c0;
+      font-size: clamp(1.2rem, 5vw, 1.8rem);
+      text-shadow: 0 0 10px rgba(240, 160, 192, 0.3);
+    }
+    .subtitle { color: #aaa; font-size: 0.9rem; margin-top: 0.3rem; }
+
+    .channels {
+      display: flex; justify-content: center; gap: 0.5rem; margin: 0.8rem auto 1rem; flex-wrap: wrap; padding: 0 1rem;
+    }
+    .channel-btn {
+      background: rgba(255,255,255,0.05); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+      border: 1px solid rgba(255,255,255,0.1); color: #ccc; padding: 0.5rem 1.2rem; border-radius: 20px;
+      font-size: 0.85rem; cursor: pointer; transition: all 0.2s; white-space: nowrap; font-weight: 500; letter-spacing: 0.5px;
+    }
+    .channel-btn.active { background: #d6336c; border-color: #d6336c; color: white; box-shadow: 0 0 15px rgba(214,51,108,0.4); }
+    .channel-btn:hover { background: rgba(255,255,255,0.1); }
+
+    .mode-toggle {
+      text-align: center; margin: 0.5rem 0 1rem; color: #aaa; font-size: 0.85rem; cursor: pointer; user-select: none;
+    }
+    .mode-toggle span { text-decoration: underline; color: #f0a0c0; }
+
+    .search-box {
+      display: flex; justify-content: center; gap: 0.5rem; padding: 0.5rem 1rem 1.5rem; max-width: 600px; margin: 0 auto;
+    }
+    .search-box input {
+      flex: 1; padding: 0.7rem; background: rgba(30,30,30,0.7); backdrop-filter: blur(10px);
+      border: 1px solid rgba(255,255,255,0.15); border-radius: 20px; color: #fff; font-size: 1rem;
+    }
+    .search-box button {
+      padding: 0.7rem 1.2rem; background: #d6336c; border: none; border-radius: 20px; color: white; font-weight: bold; cursor: pointer; transition: background 0.2s;
+    }
+    .search-box button:hover { background: #c0255a; }
+
+    .feed { max-width: 700px; margin: 0 auto; padding: 0 1rem 3rem; display: flex; flex-direction: column; gap: 1.8rem; }
+
+    .card {
+      position: relative;
+      background: rgba(20, 20, 25, 0.65); backdrop-filter: blur(16px) saturate(180%); -webkit-backdrop-filter: blur(16px) saturate(180%);
+      border: 1px solid rgba(255,255,255,0.08); border-radius: 24px; overflow: hidden; box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+      transition: transform 0.15s; contain: content;
+    }
+    .card:hover { transform: scale(1.01); }
+
+    /* Для фото: автоширина, но не больше контейнера */
+    .card img:not(.video-preview img):not(.redgifs-preview img) {
+      display: block; width: auto; height: auto; max-width: 100%; max-height: 60vh; margin: 0 auto; background: #000; object-fit: contain; border: none;
+    }
+    /* Для видео: всегда на всю ширину */
+    .card video {
+      display: block; width: 100%; height: auto; max-height: 60vh; object-fit: contain; background: #000; border: none;
+    }
+    .card iframe { width: 100%; aspect-ratio: 16/9; height: auto; max-height: 60vh; background: #000; border: none; }
+
+    .card .caption {
+      padding: 0.8rem 1rem; font-size: 0.95rem; color: #ccc; background: rgba(0,0,0,0.3); border-top: 1px solid rgba(255,255,255,0.05);
+    }
+    .card .actions {
+      display: flex; gap: 0.5rem; padding: 0.6rem 1rem; background: rgba(0,0,0,0.3); border-top: 1px solid rgba(255,255,255,0.05); justify-content: flex-end;
+    }
+    .actions button {
+      background: rgba(255,255,255,0.06); backdrop-filter: blur(5px); border: 1px solid rgba(255,255,255,0.12); color: #ccc;
+      padding: 0.3rem 0.9rem; border-radius: 20px; cursor: pointer; transition: background 0.2s, border-color 0.2s, color 0.2s;
+      display: inline-flex; align-items: center; gap: 0.2rem; font-size: 0.9rem;
+    }
+    .actions button:hover { background: rgba(255,255,255,0.1); }
+    .actions button.liked { background: #2d5a27; border-color: #4caf50; color: #fff; animation: pop 0.3s ease; }
+    .actions button.disliked { background: #5a2727; border-color: #f44336; color: #fff; animation: pop 0.3s ease; }
+    @keyframes pop { 0% { transform: scale(1); } 50% { transform: scale(1.15); } 100% { transform: scale(1); } }
+
+    .redgifs-preview, .video-preview { position: relative; cursor: pointer; display: block; }
+    .redgifs-preview img, .video-preview img { width: 100%; max-height: 60vh; object-fit: contain; background: #000; }
+    .redgifs-preview::after, .video-preview::after { content: "▶"; position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); font-size: 3rem; color: white; opacity: 0.8; text-shadow: 0 0 10px black; pointer-events: none; }
+
+    .download-btn {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      background: rgba(0,0,0,0.65);
+      backdrop-filter: blur(6px);
+      border: 1px solid rgba(255,255,255,0.25);
+      color: #fff;
+      padding: 0.3rem 0.8rem;
+      border-radius: 8px;
+      font-size: 0.8rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 0.2s;
+      z-index: 5;
+      border: none;
+      outline: none;
+    }
+    .download-btn:hover { background: rgba(214,51,108,0.8); }
+
+    .loading { text-align: center; padding: 2rem; color: #888; }
+    .skeleton { width: 100%; height: 300px; background: linear-gradient(90deg, #1e1e1e 25%, #2a2a2a 50%, #1e1e1e 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; border-radius: 24px; }
+    @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+
+    .error-card {
+      background: rgba(42,17,17,0.8); backdrop-filter: blur(12px); border: 1px solid rgba(255,80,80,0.3); border-radius: 20px;
+      padding: 1.5rem; margin: 0.5rem 0; color: #f66; text-align: center;
+    }
+    .error-card p { margin-bottom: 0.5rem; }
+    .error-card button { background: #d6336c; color: white; border: none; padding: 0.5rem 1.2rem; border-radius: 20px; cursor: pointer; margin-top: 0.5rem; }
+
+    .to-top {
+      position: fixed; bottom: 20px; right: 20px; width: 44px; height: 44px; background: rgba(214,51,108,0.8); backdrop-filter: blur(10px);
+      border: none; border-radius: 50%; color: white; font-size: 1.2rem; cursor: pointer; opacity: 0; transition: opacity 0.3s;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.4); display: flex; align-items: center; justify-content: center; z-index: 20;
+    }
+    .to-top.visible { opacity: 1; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>🔥 Персональная лента v2.0</h1>
+    <p class="subtitle">Ищи, оценивай — контент подстроится</p>
+  </header>
+
+  <div class="channels" id="channels">
+    <button class="channel-btn active" data-channel="mix">🔥 Лента</button>
+    <button class="channel-btn" data-channel="porno">🎬 Порно</button>
+  </div>
+
+  <div class="mode-toggle" id="modeToggle" role="button" aria-label="Переключить режим">
+    Сейчас: <span id="modeLabel">авто-лента</span> (нажми, чтобы переключить на поиск)
+  </div>
+
+  <div class="search-box" id="searchBox" style="display:none;">
+    <input type="text" id="searchInput" placeholder="Например: alt redhead milf" aria-label="Поисковый запрос" autofocus>
+    <button id="searchBtn">Искать</button>
+  </div>
+
+  <div class="feed" id="feed" role="feed" aria-label="Лента контента"></div>
+  <div id="loader" class="loading" style="display:none;"></div>
+
+  <button class="to-top" id="toTopBtn" aria-label="Наверх" title="Наверх">↑</button>
+
+  <script>
+  (function() {
+    const CHANNELS = {
+      mix: [
+        'GoneWild','RealGirls','Nude_Selfie','PetiteGoneWild','BustyPetite','AltGirls','altgonewild','gothsluts','emogirls','tattoo',
+        'NSFW_GIF','porn_gifs','porninfifteenseconds','adultgifs','gentlemanboners','classysexy','SexyButNotPorn',
+        'milf','curvy','AsiansGoneWild','holdthemoan','OnOff','Amateur','gwpublic','LegalTeens','Blonde','Redhead','cumsluts','deepthroat','anal','pussy','ass',
+        'Hotchickswithtattoos','SuicideGirls','PrettyAltGirls','NSFW_Art','TheArtOfTheTease','girlsinyogapants','lingerie'
+      ],
+      porno: [
+        'NSFW_GIF','porn_gifs','nsfw_gif','porninfifteenseconds','60fpsporn','nsfw_html5','adultgifs','hardcore','porn','nsfw','cumsluts','LegalTeens','Blowjobs','deepthroat','anal','creampie','pussy','ass','pornvids'
+      ]
+    };
+
+    let currentChannel = 'mix';
+    const STORAGE_KEY = 'liquid_feed_v5';
+    const SEEN_MAX = 3000;
+    const MAX_DOM_CARDS = 40;
+
+    let state = {
+      subWeights: {},
+      tagWeights: {},
+      seenPosts: new Set(),
+      searchAfter: null,
+      mode: 'auto'
+    };
+
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (raw) {
+        const saved = JSON.parse(raw);
+        state.subWeights = saved.subWeights || {};
+        state.tagWeights = saved.tagWeights || {};
+        if (saved.seenPosts) saved.seenPosts.forEach(id => state.seenPosts.add(id));
+        if (saved.mode) state.mode = saved.mode;
+      }
+    } catch (e) {}
+
+    function saveState() {
+      const toSave = {
+        subWeights: state.subWeights,
+        tagWeights: state.tagWeights,
+        seenPosts: Array.from(state.seenPosts).slice(-SEEN_MAX),
+        mode: state.mode
+      };
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(toSave));
+    }
+
+    function markSeen(postId) {
+      state.seenPosts.add(postId);
+      if (state.seenPosts.size > SEEN_MAX) {
+        const iter = state.seenPosts.values();
+        for (let i = 0; i < state.seenPosts.size - SEEN_MAX; i++) state.seenPosts.delete(iter.next().value);
+      }
+    }
+
+    function recordFeedback(postId, subreddit, tags, liked) {
+      markSeen(postId);
+      if (!state.subWeights[subreddit]) state.subWeights[subreddit] = { likes: 0, dislikes: 0 };
+      liked ? state.subWeights[subreddit].likes++ : state.subWeights[subreddit].dislikes++;
+      tags.forEach(tag => {
+        if (!state.tagWeights[tag]) state.tagWeights[tag] = { likes: 0, dislikes: 0 };
+        liked ? state.tagWeights[tag].likes++ : state.tagWeights[tag].dislikes++;
+      });
+      saveState();
+    }
+
+    function selectNextSub() {
+      const candidates = CHANNELS[currentChannel] || CHANNELS.mix;
+      return candidates[Math.floor(Math.random() * candidates.length)];
+    }
+
+    // JSONP с fallback на old.reddit.com + случайный параметр для избежания кеша Reddit
+    function jsonp(path, callbackName, timeoutMs = 15000) {
+      return new Promise((resolve, reject) => {
+        const bases = ['https://www.reddit.com', 'https://old.reddit.com'];
+        let attempt = 0;
+
+        function tryLoad() {
+          if (attempt >= bases.length) {
+            reject(new Error('JSONP network error'));
+            return;
+          }
+
+          const base = bases[attempt];
+          const script = document.createElement('script');
+          script.referrerPolicy = 'no-referrer';
+          // Добавляем случайный параметр _ для обхода кеша Reddit
+          const separator = path.includes('?') ? '&' : '?';
+          const fullUrl = base + path + separator + 'jsonp=' + callbackName + '&_=' + Date.now();
+
+          const timeout = setTimeout(() => {
+            cleanup();
+            attempt++;
+            tryLoad();
+          }, timeoutMs);
+
+          function cleanup() {
+            clearTimeout(timeout);
+            delete window[callbackName];
+            if (script.parentNode) script.parentNode.removeChild(script);
+          }
+
+          window[callbackName] = (data) => {
+            cleanup();
+            resolve(data);
+          };
+
+          script.onerror = () => {
+            cleanup();
+            attempt++;
+            tryLoad();
+          };
+
+          script.src = fullUrl;
+          document.head.appendChild(script);
+        }
+
+        tryLoad();
+      });
+    }
+
+    // Перемешивание Фишера-Йетса
+    function shuffle(arr) {
+      for (let i = arr.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+      }
+      return arr;
+    }
+
+    function extractTags(title, subreddit) {
+      const tags = [];
+      const lower = title.toLowerCase();
+      const patterns = {
+        'milf': /милфа|milf|мамочка|зрелая/i,
+        'alt': /альт|alt|goth|тату|пирсинг|нефор|прокол/i,
+        'blonde': /блондин|blonde|светлые/i,
+        'brunette': /брюнет|brunette|тёмные/i,
+        'redhead': /рыж|redhead|рыжая/i,
+        'asian': /азиат|asian|япон|кита/i,
+        'artistic': /art|худож|эстети|чб|bnw/i,
+        'lingerie': /бель[ёе]|кружев|lingerie/i,
+        'curvy': /curvy|пыш|толст|фигур|plus.?size/i,
+        'porno': /porn|sex|hardcore|blowjob|anal/i
+      };
+      for (let [tag, regex] of Object.entries(patterns)) {
+        if (regex.test(lower)) tags.push(tag);
+      }
+      tags.push(subreddit.toLowerCase());
+      return [...new Set(tags)];
+    }
+
+    // Универсальная функция скачивания (через blob, чтобы гарантированно сохранить в галерею)
+    async function downloadMedia(url, filenameHint) {
+      try {
+        const response = await fetch(url);
+        const blob = await response.blob();
+        const blobUrl = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = blobUrl;
+        a.download = filenameHint || 'media';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(blobUrl);
+      } catch (e) {
+        // fallback: открыть в новой вкладке
+        window.open(url, '_blank');
+      }
+    }
+
+    function createCard(post) {
+      const data = post.data;
+      if (!data || data.stickied) return null;
+      const title = data.title || '';
+      const url = data.url;
+      const domain = data.domain;
+      const subreddit = data.subreddit;
+      const postId = data.id;
+
+      if (state.seenPosts.has(postId)) return null;
+
+      const tags = extractTags(title, subreddit);
+      const card = document.createElement('div');
+      card.className = 'card';
+      card.dataset.postId = postId;
+      card.dataset.subreddit = subreddit;
+      card.dataset.tags = tags.join(',');
+
+      let mediaElement = null;
+      let downloadUrl = null;
+
+      // Reddit видео
+      if (data.is_video && data.media && data.media.reddit_video) {
+        const fallback = data.media.reddit_video.fallback_url;
+        const thumbnail = (data.thumbnail && data.thumbnail !== 'self' && data.thumbnail !== 'default') ? data.thumbnail : '';
+        downloadUrl = fallback;
+
+        mediaElement = document.createElement('video');
+        mediaElement.src = fallback;
+        mediaElement.controls = true;
+        mediaElement.playsInline = true;
+        mediaElement.preload = 'metadata';
+        if (thumbnail) {
+          mediaElement.poster = thumbnail;
+        }
+
+        // Если видео не загружается – заменяем на превью
+        mediaElement.addEventListener('error', () => {
+          const permalink = 'https://www.reddit.com' + (data.permalink || '');
+          const wrapper = document.createElement('div');
+          wrapper.className = 'video-preview';
+          if (thumbnail) {
+            const img = document.createElement('img');
+            img.src = thumbnail;
+            img.alt = title || 'Видео';
+            img.loading = 'lazy';
+            wrapper.appendChild(img);
+          } else {
+            wrapper.style.background = '#111';
+            wrapper.style.height = '200px';
+            wrapper.style.display = 'flex';
+            wrapper.style.alignItems = 'center';
+            wrapper.style.justifyContent = 'center';
+            wrapper.style.color = '#888';
+            wrapper.textContent = '🎬 Видео';
+          }
+          wrapper.addEventListener('click', () => window.open(permalink, '_blank'));
+          if (mediaElement.parentNode) {
+            mediaElement.parentNode.replaceChild(wrapper, mediaElement);
+            mediaElement = wrapper;
+            const existingBtn = card.querySelector('.download-btn');
+            if (existingBtn) existingBtn.remove();
+            downloadUrl = null;
+          }
+        });
+      }
+      // Imgur gifv -> mp4
+      else if (url && domain === 'i.imgur.com' && url.endsWith('.gifv')) {
+        const mp4Url = url.replace(/\.gifv$/, '.mp4');
+        downloadUrl = mp4Url;
+        mediaElement = document.createElement('video');
+        mediaElement.src = mp4Url;
+        mediaElement.controls = true;
+        mediaElement.playsInline = true;
+        mediaElement.preload = 'metadata';
+      }
+      // RedGIFs
+      else if (domain === 'redgifs.com' || domain === 'www.redgifs.com') {
+        const match = url.match(/\/watch\/([a-zA-Z0-9]+)/);
+        if (match) {
+          const wrapper = document.createElement('div');
+          wrapper.className = 'redgifs-preview';
+          const preview = document.createElement('img');
+          preview.src = `https://thumbs2.redgifs.com/${match[1]}-mobile.jpg`;
+          preview.alt = title || 'RedGIFs';
+          preview.loading = 'lazy';
+          downloadUrl = preview.src; // сохраняем превью, не видео
+          wrapper.appendChild(preview);
+          wrapper.addEventListener('click', () => {
+            const iframe = document.createElement('iframe');
+            iframe.src = `https://www.redgifs.com/ifr/${match[1]}`;
+            iframe.allowFullscreen = true;
+            iframe.allow = 'autoplay; fullscreen';
+            iframe.referrerPolicy = 'no-referrer';
+            iframe.loading = 'lazy';
+            wrapper.innerHTML = '';
+            wrapper.appendChild(iframe);
+            wrapper.classList.remove('redgifs-preview');
+          });
+          mediaElement = wrapper;
+        }
+      }
+      // Изображения
+      else if (url && (url.match(/\.(jpg|jpeg|png|gif|webp)(\?.*)?$/i) || domain === 'i.redd.it' || domain === 'i.imgur.com')) {
+        downloadUrl = url;
+        mediaElement = document.createElement('img');
+        mediaElement.src = url;
+        mediaElement.alt = title || 'Контент';
+        mediaElement.loading = 'lazy';
+      }
+
+      if (!mediaElement) return null;
+
+      card.appendChild(mediaElement);
+
+      // Кнопка скачивания
+      if (downloadUrl) {
+        const downloadBtn = document.createElement('button');
+        downloadBtn.className = 'download-btn';
+        downloadBtn.textContent = '⬇ Скачать';
+        downloadBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          e.preventDefault();
+          // Определяем расширение для имени файла
+          let ext = '.jpg';
+          if (downloadUrl.includes('.mp4') || downloadUrl.includes('.gifv')) ext = '.mp4';
+          else if (downloadUrl.includes('.webp')) ext = '.webp';
+          else if (downloadUrl.includes('.png')) ext = '.png';
+          const filename = (title || 'media').replace(/[^a-z0-9]/gi, '_').substring(0, 30) + ext;
+          downloadMedia(downloadUrl, filename);
+        });
+        card.appendChild(downloadBtn);
+      }
+
+      if (title) {
+        const cap = document.createElement('div');
+        cap.className = 'caption';
+        cap.textContent = title;
+        card.appendChild(cap);
+      }
+
+      const actions = document.createElement('div');
+      actions.className = 'actions';
+      const likeBtn = document.createElement('button');
+      likeBtn.innerHTML = '👍 <span>0</span>';
+      likeBtn.setAttribute('aria-label', 'Нравится');
+      const dislikeBtn = document.createElement('button');
+      dislikeBtn.innerHTML = '👎 <span>0</span>';
+      dislikeBtn.setAttribute('aria-label', 'Не нравится');
+
+      let feedbackRecorded = false;
+      likeBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (feedbackRecorded) return;
+        feedbackRecorded = true;
+        likeBtn.classList.add('liked');
+        recordFeedback(postId, subreddit, tags, true);
+        updateCounts();
+      });
+      dislikeBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (feedbackRecorded) return;
+        feedbackRecorded = true;
+        dislikeBtn.classList.add('disliked');
+        recordFeedback(postId, subreddit, tags, false);
+        updateCounts();
+      });
+
+      function updateCounts() {
+        const subW = state.subWeights[subreddit] || {};
+        likeBtn.querySelector('span').textContent = subW.likes || 0;
+        dislikeBtn.querySelector('span').textContent = subW.dislikes || 0;
+      }
+      updateCounts();
+
+      actions.appendChild(likeBtn);
+      actions.appendChild(dislikeBtn);
+      card.appendChild(actions);
+
+      markSeen(postId);
+      saveState();
+
+      return card;
+    }
+
+    function appendCards(posts, clear = false) {
+      const feed = document.getElementById('feed');
+      if (clear) feed.innerHTML = '';
+
+      // Гарантированное перемешивание
+      const shuffled = shuffle([...posts]);
+
+      const fragment = document.createDocumentFragment();
+      shuffled.forEach(post => {
+        const card = createCard(post);
+        if (card) fragment.appendChild(card);
+      });
+      feed.appendChild(fragment);
+
+      const cards = feed.querySelectorAll('.card');
+      if (cards.length > MAX_DOM_CARDS) {
+        for (let i = 0; i < cards.length - MAX_DOM_CARDS; i++) {
+          cards[i].remove();
+        }
+      }
+    }
+
+    // Остановка остальных видео при воспроизведении нового
+    document.addEventListener('play', function(e) {
+      const videos = document.querySelectorAll('video');
+      videos.forEach(v => {
+        if (v !== e.target) v.pause();
+      });
+    }, true);
+
+    // Тап по видео — play/pause
+    document.addEventListener('click', function(e) {
+      if (e.target.tagName === 'VIDEO') {
+        e.preventDefault();
+        if (e.target.paused) {
+          e.target.play();
+        } else {
+          e.target.pause();
+        }
+      }
+    });
+
+    function showErrorRetry(message) {
+      const feed = document.getElementById('feed');
+      const errDiv = document.createElement('div');
+      errDiv.className = 'error-card';
+      errDiv.innerHTML = `
+        <p>⚠️ ${message}</p>
+        <p>Проверьте интернет или повторите позже.</p>
+        <button id="retryBtn">🔄 Повторить</button>
+      `;
+      feed.appendChild(errDiv);
+      document.getElementById('retryBtn').addEventListener('click', () => {
+        errDiv.remove();
+        loadAuto();
+      });
+    }
+
+    let isLoadingAuto = false;
+    async function loadAuto() {
+      if (isLoadingAuto) return;
+      isLoadingAuto = true;
+      const loader = document.getElementById('loader');
+      loader.style.display = 'block';
+      loader.innerHTML = '<div class="skeleton"></div>';
+
+      try {
+        const sub = selectNextSub();
+        const path = `/r/${sub}/hot.json?limit=12`;
+        const json = await jsonp(path, 'redditCallback');
+        const posts = json.data.children;
+        appendCards(posts, false);
+        loader.style.display = 'none';
+      } catch (err) {
+        console.error(err);
+        loader.style.display = 'none';
+        showErrorRetry(err.message);
+      } finally {
+        isLoadingAuto = false;
+      }
+    }
+
+    let isLoadingSearch = false;
+    async function doSearch(query, append = false) {
+      if (isLoadingSearch) return;
+      if (!query.trim()) return;
+      isLoadingSearch = true;
+      const loader = document.getElementById('loader');
+      loader.style.display = 'block';
+      loader.innerHTML = '<div class="skeleton"></div>';
+
+      try {
+        const encoded = encodeURIComponent(query + ' nsfw:yes');
+        let path = `/search.json?q=${encoded}&limit=15&include_over_18=on`;
+        if (append && state.searchAfter) path += `&after=${state.searchAfter}`;
+        const json = await jsonp(path, 'redditSearchCallback');
+        const children = json.data.children;
+        state.searchAfter = json.data.after;
+        appendCards(children, !append);
+        loader.style.display = 'none';
+
+        if (state.searchAfter && state.mode === 'search') {
+          const feed = document.getElementById('feed');
+          const existing = document.getElementById('loadMoreBtn');
+          if (existing) existing.remove();
+          const btn = document.createElement('button');
+          btn.id = 'loadMoreBtn';
+          btn.textContent = 'Загрузить ещё';
+          btn.style.cssText = 'display:block; margin:1rem auto; padding:0.5rem 1rem; background:#d6336c; color:white; border:none; border-radius:20px; cursor:pointer;';
+          btn.addEventListener('click', () => {
+            btn.remove();
+            doSearch(query, true);
+          });
+          feed.appendChild(btn);
+        }
+      } catch (err) {
+        console.error(err);
+        loader.innerHTML = `<div class="error">Ошибка поиска: ${err.message}</div>`;
+      } finally {
+        isLoadingSearch = false;
+      }
+    }
+
+    const sentinel = document.createElement('div');
+    sentinel.id = 'sentinel';
+    sentinel.style.height = '1px';
+    document.getElementById('feed').after(sentinel);
+    const observer = new IntersectionObserver((entries) => {
+      if (entries[0].isIntersecting && state.mode === 'auto' && !isLoadingAuto) loadAuto();
+    }, { rootMargin: '400px' });
+    observer.observe(sentinel);
+
+    document.getElementById('channels').addEventListener('click', (e) => {
+      if (e.target.classList.contains('channel-btn')) {
+        document.querySelectorAll('.channel-btn').forEach(b => b.classList.remove('active'));
+        e.target.classList.add('active');
+        currentChannel = e.target.dataset.channel;
+        document.getElementById('feed').innerHTML = '';
+        const loadMore = document.getElementById('loadMoreBtn');
+        if (loadMore) loadMore.remove();
+        loadAuto();
+      }
+    });
+
+    const modeToggle = document.getElementById('modeToggle');
+    const modeLabel = document.getElementById('modeLabel');
+    const searchBox = document.getElementById('searchBox');
+    const searchInput = document.getElementById('searchInput');
+    const searchBtn = document.getElementById('searchBtn');
+    const channelsDiv = document.getElementById('channels');
+
+    function setMode(mode) {
+      state.mode = mode;
+      saveState();
+      if (mode === 'search') {
+        modeLabel.textContent = 'поиск';
+        searchBox.style.display = 'flex';
+        channelsDiv.style.display = 'none';
+      } else {
+        modeLabel.textContent = 'авто-лента';
+        searchBox.style.display = 'none';
+        channelsDiv.style.display = 'flex';
+        document.getElementById('feed').innerHTML = '';
+        const loadMore = document.getElementById('loadMoreBtn');
+        if (loadMore) loadMore.remove();
+        loadAuto();
+      }
+    }
+
+    modeToggle.addEventListener('click', () => {
+      setMode(state.mode === 'auto' ? 'search' : 'auto');
+    });
+    searchBtn.addEventListener('click', () => {
+      state.searchAfter = null;
+      doSearch(searchInput.value);
+    });
+    searchInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') {
+        state.searchAfter = null;
+        doSearch(searchInput.value);
+      }
+    });
+
+    if (state.mode === 'search') {
+      setMode('search');
+    } else {
+      channelsDiv.style.display = 'flex';
+      loadAuto();
+    }
+
+    const toTopBtn = document.getElementById('toTopBtn');
+    window.addEventListener('scroll', () => {
+      toTopBtn.classList.toggle('visible', window.scrollY > 800);
+    });
+    toTopBtn.addEventListener('click', () => {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+  })();
+  </script>
+</body>
+  </html>
