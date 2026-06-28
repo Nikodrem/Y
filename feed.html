@@ -222,9 +222,10 @@
 
   <script>
   (function() {
-    // Расширенные списки: mix 60+, porno 35+
+    // УБОЙНЫЙ СПИСОК: 80+ сабреддитов для Ленты, 40+ для Порно
     const CHANNELS = {
       mix: [
+        // Классика и эстетика
         'GoneWild','RealGirls','Nude_Selfie','PetiteGoneWild','BustyPetite','AltGirls','altgonewild','gothsluts','emogirls','tattoo',
         'gentlemanboners','classysexy','SexyButNotPorn','milf','curvy','AsiansGoneWild','holdthemoan','OnOff','Amateur','gwpublic',
         'LegalTeens','Blonde','Redhead','cumsluts','pussy','ass','Hotchickswithtattoos','SuicideGirls','PrettyAltGirls',
@@ -232,17 +233,28 @@
         'FineArtNudes','TheFemaleForm','goddesses','ElegantNudes','NudeArt','ArtisticNudes','WomenInArt','erotica','sensualnudes',
         'TotalBabes','BeautifulWomen','PrettyGirlsNSFW','FitNakedGirls','AthleticBabes','assholebehindthong','boobs','tits',
         'NakedGirls','NudesGoneWild','GlamourNudes',
-        'CamGirls','LiveCamBabes','WebcamGirlsNSFW','CamSluts','Chaturbates','just18','barelylegal','YoungGirlsGoneWild',
-        'TeensGoneWild','TeenGirls','CollegeGirlsNSFW','AmateurTeens','AltBoobWorld','GothGirls','PunkGirls','EmoGirlsNSFW',
-        'TattooGirls','PiercedNSFW','AltGirlsNSFW','PunkGirlsNSFW',
+        // Молодые и дерзкие
+        'just18','barelylegal','YoungGirlsGoneWild','TeensGoneWild','TeenGirls','CollegeGirlsNSFW','AmateurTeens','xsmallgirls',
+        'petiteNSFW','cuteasians','AsianCuties','LegalTeens','Barelylegal','YoungNudes','TeenBeauties','PaleGirls','PetiteGoneWild',
+        // Альтушки и тату
+        'AltGirlsNSFW','AltGoneWild','altbabes','AltChicks','GothGirls','PunkGirls','EmoGirlsNSFW','TattooGirls','PiercedNSFW',
+        'Hotchickswithtattoos','SuicideGirls','PrettyAltGirls','AltBoobWorld','ALT_FASHION','alt_erotica','tattoosgonewild',
+        'PunkGirlsNSFW','goth_girls','gothsluts','alt_porn','AltGifs',
+        // Дикие и безумные
+        'holdthemoan','gwpublic','cumsluts','GirlsGoneWild','onoff','workgonewild','funwithfriends','realpublicnudity',
+        'wildgirls','gonewildsmiles','GoneWildCurvy',
+        // Камгерлз и вебкам
+        'CamGirls','LiveCamBabes','WebcamGirlsNSFW','CamSluts','Chaturbates',
+        // Качественный контент
         'HighResNSFW','ArtisticNudes','EroticLuxury','ClassyPorn','NSFW_Photography','BoudoirPhotography',
+        // Хентай и аниме
         'HentaiArt','Hentai','AnimeNudes','Ecchi'
       ],
       porno: [
         'NSFW_GIF','porn_gifs','nsfw_gif','porninfifteenseconds','60fpsporn','nsfw_html5','adultgifs','hardcore','porn','nsfw',
         'cumsluts','LegalTeens','Blowjobs','deepthroat','anal','creampie','pussy','ass','pornvids','PornStarHQ','PornStars',
         'BigBoobsGW','BustyNatural','TinyTits','NudeSelfie','OralCreampie','roughsex','passionx','bdsm','bondage','pornID',
-        'HighQualityGifs','PornStarHQ','PornStars','PornStarHQ'
+        'PornStarHQ','HighQualityGifs','porn_gifs','NSFW_GIF','porninfifteenseconds','adultgifs','pornvids','hardcore','porn'
       ]
     };
 
@@ -263,7 +275,7 @@
     }
 
     let currentChannel = 'mix';
-    const STORAGE_KEY = 'liquid_feed_final_v7';
+    const STORAGE_KEY = 'liquid_feed_final_v8';
     const SEEN_MAX = 10000;
     const MAX_DOM_CARDS = 40;
     const RECENT_SUB_LIMIT = 15;
@@ -599,7 +611,6 @@
 
       card.appendChild(mediaElement);
 
-      // Флажок закладки только для видео
       if (isVideoPost(data)) {
         const bookmarkBtn = document.createElement('button');
         bookmarkBtn.className = 'bookmark-btn';
@@ -724,10 +735,8 @@
         });
         card.appendChild(removeBtn);
 
-        // При клике на карточку — встроить плеер
         card.addEventListener('click', () => {
-          if (card.querySelector('video, iframe')) return; // уже играет
-          // Очищаем и вставляем плеер
+          if (card.querySelector('video, iframe')) return;
           card.innerHTML = '';
           const removeBtn2 = document.createElement('button');
           removeBtn2.className = 'remove-btn'; removeBtn2.innerHTML = '&times;';
@@ -909,7 +918,6 @@
       }
     });
 
-    // Личный кабинет
     const cabinetModal = document.getElementById('cabinetModal');
     document.getElementById('openCabinetBtn').addEventListener('click', () => {
       cabinetModal.classList.add('open');
