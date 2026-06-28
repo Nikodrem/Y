@@ -3,7 +3,6 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-  <!-- Отключаем кеш -->
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
@@ -75,11 +74,9 @@
     }
     .card:hover { transform: scale(1.01); }
 
-    /* Фото: авторазмер */
     .card img:not(.video-preview img):not(.redgifs-preview img) {
       display: block; width: auto; height: auto; max-width: 100%; max-height: 60vh; margin: 0 auto; background: #000; object-fit: contain; border: none;
     }
-    /* Видео: на всю ширину, с сохранением пропорций */
     .card video {
       display: block; width: 100%; height: auto; max-height: 60vh; object-fit: contain; background: #000; border: none;
     }
@@ -184,7 +181,7 @@
     };
 
     let currentChannel = 'mix';
-    const STORAGE_KEY = 'liquid_feed_ultimate';
+    const STORAGE_KEY = 'liquid_feed_final_v2';
     const SEEN_MAX = 3000;
     const MAX_DOM_CARDS = 40;
 
@@ -290,7 +287,6 @@
       });
     }
 
-    // Перемешивание Фишера-Йетса
     function shuffle(arr) {
       for (let i = arr.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
@@ -321,23 +317,28 @@
       return [...new Set(tags)];
     }
 
-    // Функция скачивания через fetch, чтобы сохранить прямо в галерею
-    async function downloadMedia(url, filenameHint) {
-      try {
-        const response = await fetch(url);
-        const blob = await response.blob();
+    // Скачивание фото через canvas (гарантированно, без CORS)
+    function downloadImage(imgElement, filename) {
+      const canvas = document.createElement('canvas');
+      canvas.width = imgElement.naturalWidth;
+      canvas.height = imgElement.naturalHeight;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(imgElement, 0, 0);
+      canvas.toBlob((blob) => {
         const blobUrl = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = blobUrl;
-        a.download = filenameHint || 'media';
+        a.download = filename;
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
         URL.revokeObjectURL(blobUrl);
-      } catch (e) {
-        // Если fetch не сработал, открываем в новой вкладке
-        window.open(url, '_blank');
-      }
+      }, 'image/jpeg', 0.95);
+    }
+
+    // Скачивание видео – невозможно без сервера, открываем в новой вкладке
+    function downloadVideo(url) {
+      window.open(url, '_blank');
     }
 
     function createCard(post) {
@@ -360,12 +361,14 @@
 
       let mediaElement = null;
       let downloadUrl = null;
+      let isImage = false;
 
       // Reddit видео
       if (data.is_video && data.media && data.media.reddit_video) {
         const fallback = data.media.reddit_video.fallback_url;
         const thumbnail = (data.thumbnail && data.thumbnail !== 'self' && data.thumbnail !== 'default') ? data.thumbnail : '';
         downloadUrl = fallback;
+        isImage = false;
 
         mediaElement = document.createElement('video');
         mediaElement.src = fallback;
@@ -376,7 +379,6 @@
           mediaElement.poster = thumbnail;
         }
 
-        // Если видео не загружается – заменяем на превью с переходом на Reddit
         mediaElement.addEventListener('error', () => {
           const permalink = 'https://www.reddit.com' + (data.permalink || '');
           const wrapper = document.createElement('div');
@@ -410,6 +412,7 @@
       else if (url && domain === 'i.imgur.com' && url.endsWith('.gifv')) {
         const mp4Url = url.replace(/\.gifv$/, '.mp4');
         downloadUrl = mp4Url;
+        isImage = false;
         mediaElement = document.createElement('video');
         mediaElement.src = mp4Url;
         mediaElement.controls = true;
@@ -427,6 +430,7 @@
           preview.alt = title || 'RedGIFs';
           preview.loading = 'lazy';
           downloadUrl = preview.src;
+          isImage = true; // превью – изображение
           wrapper.appendChild(preview);
           wrapper.addEventListener('click', () => {
             const iframe = document.createElement('iframe');
@@ -445,6 +449,7 @@
       // Изображения
       else if (url && (url.match(/\.(jpg|jpeg|png|gif|webp)(\?.*)?$/i) || domain === 'i.redd.it' || domain === 'i.imgur.com')) {
         downloadUrl = url;
+        isImage = true;
         mediaElement = document.createElement('img');
         mediaElement.src = url;
         mediaElement.alt = title || 'Контент';
@@ -455,7 +460,7 @@
 
       card.appendChild(mediaElement);
 
-      // Кнопка "Скачать" – напрямую в галерею
+      // Кнопка "Скачать" – умное поведение
       if (downloadUrl) {
         const downloadBtn = document.createElement('button');
         downloadBtn.className = 'download-btn';
@@ -463,12 +468,31 @@
         downloadBtn.addEventListener('click', (e) => {
           e.stopPropagation();
           e.preventDefault();
-          let ext = '.jpg';
-          if (downloadUrl.includes('.mp4') || downloadUrl.includes('.gifv')) ext = '.mp4';
-          else if (downloadUrl.includes('.webp')) ext = '.webp';
-          else if (downloadUrl.includes('.png')) ext = '.png';
-          const filename = (title || 'media').replace(/[^a-z0-9]/gi, '_').substring(0, 30) + ext;
-          downloadMedia(downloadUrl, filename);
+          if (isImage) {
+            // Для картинок – сохраняем через canvas
+            const img = mediaElement.tagName === 'IMG' ? mediaElement : mediaElement.querySelector('img');
+            if (img && img.complete && img.naturalWidth > 0) {
+              const ext = downloadUrl.split('.').pop().split('?')[0] || 'jpg';
+              const filename = (title || 'image').replace(/[^a-z0-9]/gi, '_').substring(0, 30) + '.' + ext;
+              downloadImage(img, filename);
+            } else {
+              // если изображение ещё не загружено, ждём и пробуем снова
+              const tempImg = new Image();
+              tempImg.crossOrigin = 'anonymous';
+              tempImg.src = downloadUrl;
+              tempImg.onload = () => {
+                const ext = downloadUrl.split('.').pop().split('?')[0] || 'jpg';
+                const filename = (title || 'image').replace(/[^a-z0-9]/gi, '_').substring(0, 30) + '.' + ext;
+                downloadImage(tempImg, filename);
+              };
+              tempImg.onerror = () => {
+                window.open(downloadUrl, '_blank');
+              };
+            }
+          } else {
+            // Для видео – открываем в новой вкладке
+            downloadVideo(downloadUrl);
+          }
         });
         card.appendChild(downloadBtn);
       }
@@ -528,7 +552,6 @@
       const feed = document.getElementById('feed');
       if (clear) feed.innerHTML = '';
 
-      // Перемешиваем посты для рандомности
       const shuffled = shuffle([...posts]);
 
       const fragment = document.createDocumentFragment();
@@ -546,7 +569,6 @@
       }
     }
 
-    // Остановка всех видео при воспроизведении нового
     document.addEventListener('play', function(e) {
       const videos = document.querySelectorAll('video');
       videos.forEach(v => {
@@ -554,7 +576,6 @@
       });
     }, true);
 
-    // Тап по видео – play/pause
     document.addEventListener('click', function(e) {
       if (e.target.tagName === 'VIDEO') {
         e.preventDefault();
