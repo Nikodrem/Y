@@ -102,10 +102,9 @@
     .redgifs-preview img, .video-preview img { width: 100%; max-height: 60vh; object-fit: contain; background: #000; }
     .redgifs-preview::after, .video-preview::after { content: "▶"; position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); font-size: 3rem; color: white; opacity: 0.8; text-shadow: 0 0 10px black; pointer-events: none; }
 
-    .download-btn {
+    .download-btn, .bookmark-btn {
       position: absolute;
       top: 8px;
-      right: 8px;
       background: rgba(0,0,0,0.65);
       backdrop-filter: blur(6px);
       border: 1px solid rgba(255,255,255,0.25);
@@ -120,7 +119,10 @@
       border: none;
       outline: none;
     }
-    .download-btn:hover { background: rgba(214,51,108,0.8); }
+    .download-btn { right: 8px; }
+    .bookmark-btn { left: 8px; }
+    .download-btn:hover, .bookmark-btn:hover { background: rgba(214,51,108,0.8); }
+    .bookmark-btn.bookmarked { background: #d6336c; border-color: #d6336c; }
 
     .loading { text-align: center; padding: 2rem; color: #888; }
     .skeleton { width: 100%; height: 300px; background: linear-gradient(90deg, #1e1e1e 25%, #2a2a2a 50%, #1e1e1e 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; border-radius: 24px; }
@@ -150,6 +152,7 @@
   <div class="channels" id="channels">
     <button class="channel-btn active" data-channel="mix">🔥 Лента</button>
     <button class="channel-btn" data-channel="porno">🎬 Порно</button>
+    <button class="channel-btn" data-channel="bookmarks">🔖 Закладки</button>
   </div>
 
   <div class="mode-toggle" id="modeToggle" role="button" aria-label="Переключить режим">
@@ -168,20 +171,25 @@
 
   <script>
   (function() {
-    // Проверенные списки: только девушки и порно
+    // Расширенные списки: 50+ сабреддитов в mix, 30+ в porno, включая арт и эстетику
     const CHANNELS = {
       mix: [
         'GoneWild','RealGirls','Nude_Selfie','PetiteGoneWild','BustyPetite','AltGirls','altgonewild','gothsluts','emogirls','tattoo',
         'NSFW_GIF','porn_gifs','porninfifteenseconds','adultgifs','gentlemanboners','classysexy','SexyButNotPorn',
         'milf','curvy','AsiansGoneWild','holdthemoan','OnOff','Amateur','gwpublic','LegalTeens','Blonde','Redhead','cumsluts','deepthroat','anal','pussy','ass',
-        'Hotchickswithtattoos','SuicideGirls','PrettyAltGirls','NSFW_Art','TheArtOfTheTease','girlsinyogapants','lingerie'
+        'Hotchickswithtattoos','SuicideGirls','PrettyAltGirls','NSFW_Art','TheArtOfTheTease','girlsinyogapants','lingerie',
+        'ArtGW','Boudoir','EroticArt','EroticPhotography','FineArtNudes','TheFemaleForm','goddesses','ElegantNudes','NudeArt',
+        'ArtisticNudes','WomenInArt','erotica','sensualnudes','TotalBabes','BeautifulWomen','PrettyGirlsNSFW','FitNakedGirls',
+        'AthleticBabes','assholebehindthong','asshole','pussy','boobs','tits','nsfw','NakedGirls','NudesGoneWild','GlamourNudes'
       ],
       porno: [
-        'NSFW_GIF','porn_gifs','nsfw_gif','porninfifteenseconds','60fpsporn','nsfw_html5','adultgifs','hardcore','porn','nsfw','cumsluts','LegalTeens','Blowjobs','deepthroat','anal','creampie','pussy','ass','pornvids'
+        'NSFW_GIF','porn_gifs','nsfw_gif','porninfifteenseconds','60fpsporn','nsfw_html5','adultgifs','hardcore','porn','nsfw',
+        'cumsluts','LegalTeens','Blowjobs','deepthroat','anal','creampie','pussy','ass','pornvids','PornStarHQ','PornStars',
+        'BigBoobsGW','BustyNatural','TinyTits','NudeSelfie','NakedGirls','SexyGirls','OralCreampie','roughsex','passionx',
+        'bdsm','bondage','pornID','porninfifteenseconds','nsfw_gif','nsfw_html5','adultgifs'
       ]
     };
 
-    // Жёсткий фильтр: слова, которых не должно быть в заголовках или названиях сабреддитов
     const BLOCKED_WORDS = [
       'gore', 'blood', 'kill', 'murder', 'death', 'dead', 'dying', 'violen', 'gun', 'knife', 'weapon',
       'shooting', 'stab', 'torture', 'abuse', 'corpse', 'autopsy', 'beheading', 'pain', 'suffer',
@@ -195,7 +203,7 @@
     }
 
     let currentChannel = 'mix';
-    const STORAGE_KEY = 'liquid_feed_final_v4';
+    const STORAGE_KEY = 'liquid_feed_final_v5';
     const SEEN_MAX = 10000;
     const MAX_DOM_CARDS = 40;
     const RECENT_SUB_LIMIT = 15;
@@ -207,7 +215,8 @@
       seenUrls: new Set(),
       recentSubs: [],
       searchAfter: null,
-      mode: 'auto'
+      mode: 'auto',
+      bookmarks: []
     };
 
     try {
@@ -220,6 +229,7 @@
         if (saved.seenUrls) saved.seenUrls.forEach(url => state.seenUrls.add(url));
         if (saved.recentSubs) state.recentSubs = saved.recentSubs;
         if (saved.mode) state.mode = saved.mode;
+        state.bookmarks = saved.bookmarks || [];
       }
     } catch (e) {}
 
@@ -230,7 +240,8 @@
         seenPosts: Array.from(state.seenPosts).slice(-SEEN_MAX),
         seenUrls: Array.from(state.seenUrls).slice(-SEEN_MAX),
         recentSubs: state.recentSubs.slice(-RECENT_SUB_LIMIT * 2),
-        mode: state.mode
+        mode: state.mode,
+        bookmarks: state.bookmarks
       };
       localStorage.setItem(STORAGE_KEY, JSON.stringify(toSave));
     }
@@ -374,8 +385,38 @@
       window.open(url, '_blank');
     }
 
-    function createCard(post) {
+    function createBookmarkData(post) {
       const data = post.data;
+      return {
+        id: data.id,
+        title: data.title || '',
+        url: data.url,
+        domain: data.domain,
+        subreddit: data.subreddit,
+        permalink: data.permalink,
+        is_video: data.is_video,
+        media: data.media ? { reddit_video: { fallback_url: data.media.reddit_video?.fallback_url } } : null,
+        thumbnail: data.thumbnail
+      };
+    }
+
+    function toggleBookmark(postData) {
+      const index = state.bookmarks.findIndex(b => b.id === postData.id);
+      if (index > -1) {
+        state.bookmarks.splice(index, 1);
+      } else {
+        state.bookmarks.unshift(postData);
+      }
+      saveState();
+      return index === -1; // true если добавлено
+    }
+
+    function isBookmarked(postId) {
+      return state.bookmarks.some(b => b.id === postId);
+    }
+
+    function createCard(post) {
+      const data = post.data || post; // поддержка постов из закладок (уже распакованные)
       if (!data || data.stickied) return null;
       const title = data.title || '';
       const url = data.url;
@@ -384,8 +425,6 @@
       const postId = data.id;
 
       if (state.seenPosts.has(postId) || (url && state.seenUrls.has(url))) return null;
-
-      // Фильтрация запрещённого контента
       if (isBlockedContent(title, subreddit)) return null;
 
       const tags = extractTags(title, subreddit);
@@ -399,6 +438,7 @@
       let downloadUrl = null;
       let isImage = false;
 
+      // Обработка как и раньше
       if (data.is_video && data.media && data.media.reddit_video) {
         const fallback = data.media.reddit_video.fallback_url;
         const thumbnail = (data.thumbnail && data.thumbnail !== 'self' && data.thumbnail !== 'default') ? data.thumbnail : '';
@@ -492,6 +532,28 @@
 
       card.appendChild(mediaElement);
 
+      // Кнопка закладки (слева сверху)
+      const bookmarkBtn = document.createElement('button');
+      bookmarkBtn.className = 'bookmark-btn';
+      bookmarkBtn.textContent = '🔖';
+      if (isBookmarked(postId)) bookmarkBtn.classList.add('bookmarked');
+      bookmarkBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        e.preventDefault();
+        const added = toggleBookmark(createBookmarkData({data: data}));
+        if (added) {
+          bookmarkBtn.classList.add('bookmarked');
+        } else {
+          bookmarkBtn.classList.remove('bookmarked');
+          // Если мы в режиме закладок, удалить карточку
+          if (currentChannel === 'bookmarks') {
+            card.remove();
+          }
+        }
+      });
+      card.appendChild(bookmarkBtn);
+
+      // Кнопка скачать (справа сверху)
       if (downloadUrl) {
         const downloadBtn = document.createElement('button');
         downloadBtn.className = 'download-btn';
@@ -574,6 +636,21 @@
       saveState();
 
       return card;
+    }
+
+    function renderBookmarks() {
+      const feed = document.getElementById('feed');
+      feed.innerHTML = '';
+      if (state.bookmarks.length === 0) {
+        feed.innerHTML = '<div class="loading">У вас нет закладок.</div>';
+        return;
+      }
+      const fragment = document.createDocumentFragment();
+      state.bookmarks.forEach(bookmark => {
+        const card = createCard(bookmark);
+        if (card) fragment.appendChild(card);
+      });
+      feed.appendChild(fragment);
     }
 
     function appendCards(posts, clear = false) {
@@ -700,20 +777,33 @@
     sentinel.id = 'sentinel';
     sentinel.style.height = '1px';
     document.getElementById('feed').after(sentinel);
-    const observer = new IntersectionObserver((entries) => {
-      if (entries[0].isIntersecting && state.mode === 'auto' && !isLoadingAuto) loadAuto();
+    let observer = new IntersectionObserver((entries) => {
+      if (entries[0].isIntersecting && state.mode === 'auto' && currentChannel !== 'bookmarks' && !isLoadingAuto) {
+        loadAuto();
+      }
     }, { rootMargin: '400px' });
     observer.observe(sentinel);
+
+    function switchChannel(channel) {
+      currentChannel = channel;
+      document.getElementById('feed').innerHTML = '';
+      const loadMore = document.getElementById('loadMoreBtn');
+      if (loadMore) loadMore.remove();
+      
+      if (channel === 'bookmarks') {
+        renderBookmarks();
+        observer.unobserve(sentinel); // отключаем бесконечную загрузку
+      } else {
+        observer.observe(sentinel);
+        loadAuto();
+      }
+    }
 
     document.getElementById('channels').addEventListener('click', (e) => {
       if (e.target.classList.contains('channel-btn')) {
         document.querySelectorAll('.channel-btn').forEach(b => b.classList.remove('active'));
         e.target.classList.add('active');
-        currentChannel = e.target.dataset.channel;
-        document.getElementById('feed').innerHTML = '';
-        const loadMore = document.getElementById('loadMoreBtn');
-        if (loadMore) loadMore.remove();
-        loadAuto();
+        switchChannel(e.target.dataset.channel);
       }
     });
 
@@ -731,6 +821,7 @@
         modeLabel.textContent = 'поиск';
         searchBox.style.display = 'flex';
         channelsDiv.style.display = 'none';
+        observer.unobserve(sentinel);
       } else {
         modeLabel.textContent = 'авто-лента';
         searchBox.style.display = 'none';
@@ -738,7 +829,10 @@
         document.getElementById('feed').innerHTML = '';
         const loadMore = document.getElementById('loadMoreBtn');
         if (loadMore) loadMore.remove();
-        loadAuto();
+        if (currentChannel !== 'bookmarks') {
+          observer.observe(sentinel);
+          loadAuto();
+        }
       }
     }
 
@@ -760,7 +854,7 @@
       setMode('search');
     } else {
       channelsDiv.style.display = 'flex';
-      loadAuto();
+      switchChannel(currentChannel); // начальная загрузка
     }
 
     const toTopBtn = document.getElementById('toTopBtn');
