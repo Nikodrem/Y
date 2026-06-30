@@ -192,6 +192,7 @@
   <div class="channels" id="channels">
     <button class="channel-btn active" data-channel="mix">🔥 Лента</button>
     <button class="channel-btn" data-channel="porno">🎬 Порно</button>
+    <button class="channel-btn" data-channel="stars">🌟 Порнозвёзды и вебкам</button>
     <button class="cabinet-btn" id="openCabinetBtn">👤 Личный кабинет</button>
   </div>
 
@@ -222,10 +223,9 @@
 
   <script>
   (function() {
-    // УБОЙНЫЙ СПИСОК: 80+ сабреддитов для Ленты, 40+ для Порно
+    // Обновлённые списки: добавлен канал stars
     const CHANNELS = {
       mix: [
-        // Классика и эстетика
         'GoneWild','RealGirls','Nude_Selfie','PetiteGoneWild','BustyPetite','AltGirls','altgonewild','gothsluts','emogirls','tattoo',
         'gentlemanboners','classysexy','SexyButNotPorn','milf','curvy','AsiansGoneWild','holdthemoan','OnOff','Amateur','gwpublic',
         'LegalTeens','Blonde','Redhead','cumsluts','pussy','ass','Hotchickswithtattoos','SuicideGirls','PrettyAltGirls',
@@ -233,32 +233,33 @@
         'FineArtNudes','TheFemaleForm','goddesses','ElegantNudes','NudeArt','ArtisticNudes','WomenInArt','erotica','sensualnudes',
         'TotalBabes','BeautifulWomen','PrettyGirlsNSFW','FitNakedGirls','AthleticBabes','assholebehindthong','boobs','tits',
         'NakedGirls','NudesGoneWild','GlamourNudes',
-        // Молодые и дерзкие
         'just18','barelylegal','YoungGirlsGoneWild','TeensGoneWild','TeenGirls','CollegeGirlsNSFW','AmateurTeens','xsmallgirls',
         'petiteNSFW','cuteasians','AsianCuties','LegalTeens','Barelylegal','YoungNudes','TeenBeauties','PaleGirls','PetiteGoneWild',
-        // Альтушки и тату
         'AltGirlsNSFW','AltGoneWild','altbabes','AltChicks','GothGirls','PunkGirls','EmoGirlsNSFW','TattooGirls','PiercedNSFW',
         'Hotchickswithtattoos','SuicideGirls','PrettyAltGirls','AltBoobWorld','ALT_FASHION','alt_erotica','tattoosgonewild',
         'PunkGirlsNSFW','goth_girls','gothsluts','alt_porn','AltGifs',
-        // Дикие и безумные
         'holdthemoan','gwpublic','cumsluts','GirlsGoneWild','onoff','workgonewild','funwithfriends','realpublicnudity',
         'wildgirls','gonewildsmiles','GoneWildCurvy',
-        // Камгерлз и вебкам
         'CamGirls','LiveCamBabes','WebcamGirlsNSFW','CamSluts','Chaturbates',
-        // Качественный контент
         'HighResNSFW','ArtisticNudes','EroticLuxury','ClassyPorn','NSFW_Photography','BoudoirPhotography',
-        // Хентай и аниме
         'HentaiArt','Hentai','AnimeNudes','Ecchi'
       ],
       porno: [
         'NSFW_GIF','porn_gifs','nsfw_gif','porninfifteenseconds','60fpsporn','nsfw_html5','adultgifs','hardcore','porn','nsfw',
         'cumsluts','LegalTeens','Blowjobs','deepthroat','anal','creampie','pussy','ass','pornvids','PornStarHQ','PornStars',
         'BigBoobsGW','BustyNatural','TinyTits','NudeSelfie','OralCreampie','roughsex','passionx','bdsm','bondage','pornID',
-        'PornStarHQ','HighQualityGifs','porn_gifs','NSFW_GIF','porninfifteenseconds','adultgifs','pornvids','hardcore','porn'
+        'HighQualityGifs','PornStarHQ','PornStars'
+      ],
+      stars: [
+        'AngelaWhite','MiaKhalifa','RileyReid','LanaRhoades','BelleDelphine','Amouranth','PokimaneNSFW','AlinityNSFW',
+        'ValentinaNappi','KendraLust','AbellaDanger','AsaAkira','BrandiLove','RaeLilBlack','DillionHarper','EvaLovia',
+        'LittleCaprice','ToriBlack','AlexisTexas','MandyMuse','RemyLacroix','JaniceGriffith','KagneyLinnKarter',
+        'CoryChase','KelsiMonroe','NicoletteShea','KenzieReeves','AutumnFalls','LenaPaul','EvaElfie','SashaGrey',
+        'Stoya','JynxMaze','ElsaJean','GabbieCarter','JessaRhodes','AidraFox','LiyaSilver','Morgpie',
+        'CamGirls','WebcamGirlsNSFW','Chaturbates','LiveCamBabes','CamSluts'
       ]
     };
 
-    // Жёсткий фильтр: жесть, фембои, трансы
     const BLOCKED_WORDS = [
       'gore', 'blood', 'kill', 'murder', 'death', 'dead', 'dying', 'violen', 'gun', 'knife', 'weapon',
       'shooting', 'stab', 'torture', 'abuse', 'corpse', 'autopsy', 'beheading', 'pain', 'suffer',
@@ -275,7 +276,7 @@
     }
 
     let currentChannel = 'mix';
-    const STORAGE_KEY = 'liquid_feed_final_v8';
+    const STORAGE_KEY = 'liquid_feed_final_v9';
     const SEEN_MAX = 10000;
     const MAX_DOM_CARDS = 40;
     const RECENT_SUB_LIMIT = 15;
@@ -523,6 +524,7 @@
       if (state.seenPosts.has(postId) || (url && state.seenUrls.has(url))) return null;
       if (isBlockedContent(title, subreddit)) return null;
 
+      // Для канала stars пропускаем всё, для porno только видео
       if (currentChannel === 'porno' && !isVideoPost(data)) return null;
 
       const tags = extractTags(title, subreddit);
@@ -611,6 +613,7 @@
 
       card.appendChild(mediaElement);
 
+      // Кнопка закладки только для видео
       if (isVideoPost(data)) {
         const bookmarkBtn = document.createElement('button');
         bookmarkBtn.className = 'bookmark-btn';
