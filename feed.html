@@ -209,6 +209,7 @@
     }
     #downloadProgress::-webkit-progress-bar { background: #333; border-radius: 3px; }
     #downloadProgress::-webkit-progress-value { background: #d6336c; border-radius: 3px; }
+    #saveBtn { display: none; margin-top: 0.5rem; }
   </style>
 </head>
 <body>
@@ -264,11 +265,12 @@
       </h2>
       <div class="download-tool-box">
         <input type="text" id="downloadLinkInput" placeholder="Вставьте ссылку Reddit, RedGIFs или Imgur">
-        <button id="downloadLinkBtn">Скачать</button>
+        <button id="watchBtn">Смотреть</button>
       </div>
       <video id="downloadPlayer" controls style="display:none;"></video>
       <progress id="downloadProgress" value="0" max="100" style="display:none;"></progress>
-      <div id="downloadToolMessage" style="color:#aaa; text-align:center;"></div>
+      <button id="saveBtn" class="category-btn">💾 Сохранить</button>
+      <div id="downloadToolMessage" style="color:#aaa; text-align:center; margin-top:0.5rem;"></div>
     </div>
   </div>
 
@@ -276,7 +278,7 @@
 
   <script>
   (function() {
-    // Основной канал – теперь объединяет всё
+    // Основной канал – объединяет всё
     const CHANNELS = {
       mix: [
         'GoneWild','RealGirls','Nude_Selfie','PetiteGoneWild','BustyPetite','AltGirls','altgonewild','gothsluts','emogirls','tattoo',
@@ -396,7 +398,7 @@
     }
 
     let currentChannel = 'mix';
-    const STORAGE_KEY = 'liquid_feed_final_v19';
+    const STORAGE_KEY = 'liquid_feed_final_v20';
     const SEEN_MAX = 10000;
     const MAX_DOM_CARDS = 40;
     const RECENT_SUB_LIMIT = 15;
@@ -577,7 +579,7 @@
       window.open(url, '_blank');
     }
 
-    // ====== НОВЫЕ ФУНКЦИИ ДЛЯ ПРОГРЕССА И УВЕДОМЛЕНИЙ ======
+    // Функции для прогресса и уведомлений
     let notificationAllowed = false;
     async function requestNotificationPermission() {
       if (!('Notification' in window)) return;
@@ -588,31 +590,7 @@
         notificationAllowed = (permission === 'granted');
       }
     }
-
-    function showProgressNotification(percent) {
-      if (!notificationAllowed) return;
-      const tag = 'video-download';
-      // Закрываем предыдущее уведомление с таким же тегом
-      navigator.serviceWorker?.getRegistrations().then(regs => {
-        regs.forEach(reg => reg.getNotifications({ tag }).then(notifs => notifs.forEach(n => n.close())));
-      });
-      // Создаём новое
-      const title = 'Скачивание видео';
-      const options = {
-        body: `Загружено: ${percent}%`,
-        tag: tag,
-        requireInteraction: false,
-        silent: true
-      };
-      new Notification(title, options);
-    }
-
-    function hideProgressNotification() {
-      if (!notificationAllowed) return;
-      navigator.serviceWorker?.getRegistrations().then(regs => {
-        regs.forEach(reg => reg.getNotifications({ tag: 'video-download' }).then(notifs => notifs.forEach(n => n.close())));
-      });
-    }
+    requestNotificationPermission();
 
     function downloadFileWithProgress(url, filename, progressCallback) {
       return new Promise((resolve, reject) => {
@@ -623,12 +601,14 @@
           if (event.lengthComputable) {
             const percent = Math.round((event.loaded / event.total) * 100);
             progressCallback(percent);
+            if (notificationAllowed) {
+              new Notification('Скачивание видео', { body: `Загружено: ${percent}%`, tag: 'download', silent: true });
+            }
           }
         };
         xhr.onload = () => {
           if (xhr.status === 200) {
-            const blob = xhr.response;
-            resolve(blob);
+            resolve(xhr.response);
           } else {
             reject(new Error('Download failed'));
           }
@@ -638,7 +618,6 @@
       });
     }
 
-    // Модифицированная downloadRedGif с прогрессом
     async function downloadRedGif(videoId, progressCallback = null) {
       const pageProxies = [
         (url) => `https://corsproxy.io/?url=${encodeURIComponent(url)}`,
@@ -679,6 +658,7 @@
       }
 
       if (!videoUrl) {
+        // Не удалось получить прямую ссылку – открываем страницу (старый fallback)
         window.open(watchUrl, '_blank');
         return;
       }
@@ -698,7 +678,6 @@
           window.open(videoUrl, '_blank');
         }
       } else {
-        // Без прогресса (старый метод)
         let blob = null;
         for (const proxy of pageProxies) {
           try {
@@ -722,119 +701,168 @@
       }
     }
 
-    // Обновлённая downloadByLink с плеером и прогрессом
-    async function downloadByLink(link) {
-      const msgEl = document.getElementById('downloadToolMessage');
-      const player = document.getElementById('downloadPlayer');
-      const progressBar = document.getElementById('downloadProgress');
+    // Логика модального окна скачивания
+    const watchBtn = document.getElementById('watchBtn');
+    const saveBtn = document.getElementById('saveBtn');
+    const player = document.getElementById('downloadPlayer');
+    const progressBar = document.getElementById('downloadProgress');
+    const msgEl = document.getElementById('downloadToolMessage');
+    let currentDownloadUrl = null;
+    let currentFilename = 'video.mp4';
+    let currentIsRedGifs = false;
+    let currentVideoId = null;
+
+    async function getDirectUrl(link) {
+      if (link.includes('v.redd.it') || link.includes('reddit.com/r/')) {
+        const match = link.match(/comments\/([a-z0-9]+)/i);
+        if (match) {
+          const postId = match[1];
+          const apiUrl = `https://www.reddit.com/comments/${postId}.json`;
+          const response = await fetch(`https://corsproxy.io/?url=${encodeURIComponent(apiUrl)}`);
+          const json = await response.json();
+          const post = json[0]?.data?.children[0]?.data;
+          if (post?.media?.reddit_video?.fallback_url) {
+            currentFilename = post.title ? post.title.replace(/[^a-z0-9]/gi, '_').substring(0, 30) + '.mp4' : 'reddit_video.mp4';
+            return post.media.reddit_video.fallback_url;
+          }
+        }
+      }
+      else if (link.includes('redgifs.com/watch/')) {
+        const match = link.match(/watch\/([a-zA-Z0-9]+)/);
+        if (match) {
+          currentVideoId = match[1];
+          currentIsRedGifs = true;
+          const pageProxies = [
+            (url) => `https://corsproxy.io/?url=${encodeURIComponent(url)}`,
+            (url) => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
+            (url) => `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(url)}`
+          ];
+          let html = null;
+          const watchUrl = `https://www.redgifs.com/watch/${currentVideoId}`;
+          for (const proxy of pageProxies) {
+            try {
+              const resp = await fetch(proxy(watchUrl));
+              if (resp.ok) { html = await resp.text(); break; }
+            } catch(e) {}
+          }
+          if (html) {
+            const jsonRegex = /<script[^>]*type="application\/json"[^>]*>([\s\S]*?)<\/script>/g;
+            let m;
+            while ((m = jsonRegex.exec(html)) !== null) {
+              try {
+                const data = JSON.parse(m[1]);
+                if (data?.video?.urls?.hd || data?.video?.urls?.sd) {
+                  currentFilename = `${currentVideoId}.mp4`;
+                  return data.video.urls.hd || data.video.urls.sd;
+                }
+              } catch(e) {}
+            }
+            const urlMatch = html.match(/https:\/\/thumbs\d+\.redgifs\.com\/[a-zA-Z0-9]+\.mp4/);
+            if (urlMatch) {
+              currentFilename = `${currentVideoId}.mp4`;
+              return urlMatch[0];
+            }
+          }
+          return null;
+        }
+      }
+      else if (link.includes('i.imgur.com') && link.endsWith('.gifv')) {
+        currentFilename = 'imgur_video.mp4';
+        return link.replace(/\.gifv$/, '.mp4');
+      }
+      else if (link.match(/\.(mp4|webm|mov)(\?.*)?$/i)) {
+        currentFilename = 'direct_video.mp4';
+        return link;
+      }
+      return null;
+    }
+
+    watchBtn.addEventListener('click', async () => {
+      const link = document.getElementById('downloadLinkInput').value.trim();
+      if (!link) return;
 
       player.style.display = 'none';
       player.src = '';
+      saveBtn.style.display = 'none';
       progressBar.style.display = 'none';
       progressBar.value = 0;
       msgEl.textContent = 'Обработка ссылки...';
+      currentDownloadUrl = null;
+      currentIsRedGifs = false;
 
-      // Запрашиваем разрешение на уведомления
-      await requestNotificationPermission();
-
-      try {
-        let videoUrl = null;
-        let filename = 'video.mp4';
-
-        if (link.includes('v.redd.it') || link.includes('reddit.com/r/')) {
-          const match = link.match(/comments\/([a-z0-9]+)/i);
-          if (match) {
-            const postId = match[1];
-            const apiUrl = `https://www.reddit.com/comments/${postId}.json`;
-            const response = await fetch(`https://corsproxy.io/?url=${encodeURIComponent(apiUrl)}`);
-            const json = await response.json();
-            const post = json[0]?.data?.children[0]?.data;
-            if (post?.media?.reddit_video?.fallback_url) {
-              videoUrl = post.media.reddit_video.fallback_url;
-              filename = post.title ? post.title.replace(/[^a-z0-9]/gi, '_').substring(0, 30) + '.mp4' : filename;
-            }
-          }
-        }
-        else if (link.includes('redgifs.com/watch/')) {
-          const match = link.match(/watch\/([a-zA-Z0-9]+)/);
-          if (match) {
-            const videoId = match[1];
-            // Показываем плеер, прогресс-бар, запускаем скачивание
-            player.style.display = 'block';
-            player.src = `https://www.redgifs.com/ifr/${videoId}`; // Проигрываем через iframe в video? Не сработает, video src должен быть прямой ссылкой.
-            // Лучше вставить iframe? Но мы хотим встроенный плеер. Можно вставить iframe вместо video, но по условию просили видеоплеер встроенный.
-            // Для RedGIFs прямой ссылки пока нет, но мы можем вставить iframe.
-            // Примем компромисс: если это RedGIFs, показываем iframe под полем, а после получения прямой ссылки обновим плеер.
-            player.outerHTML = '<iframe id="downloadPlayer" src="https://www.redgifs.com/ifr/' + videoId + '" allowfullscreen style="width:100%; height:auto; aspect-ratio:16/9; background:#000; border-radius:12px; margin-bottom:0.5rem;"></iframe>';
-            // Обновим ссылку на элемент
-            const iframe = document.getElementById('downloadPlayer');
-            progressBar.style.display = 'block';
-            msgEl.textContent = 'Загрузка начнется после получения прямой ссылки...';
-            // Функция прогресса
-            const progressCb = (percent) => {
-              progressBar.value = percent;
-              showProgressNotification(percent);
-              msgEl.textContent = `Загружается: ${percent}%`;
-            };
-            // Обернём downloadRedGif, чтобы он не открывал окно, а использовал коллбэк
-            // Перепишем downloadRedGif, чтобы он возвращал videoUrl, а скачивание делали здесь
-            // Но проще изменить downloadRedGif, чтобы он принимал коллбэк и не открывал окно при ошибке, а вызывал progressCallback
-            // Уже добавлен progressCallback, используем его.
-            await downloadRedGif(videoId, progressCb);
-            // После завершения downloadRedGif (если успешно) плеер можно оставить, прогресс скрыть
-            progressBar.style.display = 'none';
-            hideProgressNotification();
-            msgEl.textContent = 'Скачивание завершено!';
-            return;
-          }
-        }
-        else if (link.includes('i.imgur.com') && link.endsWith('.gifv')) {
-          videoUrl = link.replace(/\.gifv$/, '.mp4');
-          filename = 'imgur_video.mp4';
-        }
-        else if (link.match(/\.(mp4|webm|mov)(\?.*)?$/i)) {
-          videoUrl = link;
-          filename = 'direct_video.mp4';
-        }
-
-        if (!videoUrl) {
-          msgEl.textContent = 'Не удалось извлечь видео из ссылки.';
-          return;
-        }
-
-        // Показываем плеер, прогресс-бар
+      const url = await getDirectUrl(link);
+      if (url) {
+        currentDownloadUrl = url;
         player.style.display = 'block';
-        player.src = videoUrl;
+        player.src = url;
+        saveBtn.style.display = 'inline-block';
+        msgEl.textContent = 'Видео загружено. Нажмите «Сохранить» для скачивания.';
+      } else if (currentIsRedGifs) {
+        // Показываем iframe
+        player.outerHTML = `<iframe id="downloadPlayer" src="https://www.redgifs.com/ifr/${currentVideoId}" allowfullscreen style="width:100%; height:auto; aspect-ratio:16/9; background:#000; border-radius:12px; margin-bottom:0.5rem;"></iframe>`;
+        const newPlayer = document.getElementById('downloadPlayer');
+        if (newPlayer) newPlayer.style.display = 'block';
+        saveBtn.style.display = 'inline-block';
+        msgEl.textContent = 'Прямая ссылка не получена. Для скачивания нажмите «Сохранить» (откроется iframe).';
+        currentDownloadUrl = `https://www.redgifs.com/watch/${currentVideoId}`;
+      } else {
+        msgEl.textContent = 'Не удалось извлечь видео из ссылки.';
+      }
+    });
+
+    saveBtn.addEventListener('click', async () => {
+      if (!currentDownloadUrl) return;
+      if (currentIsRedGifs && currentDownloadUrl.startsWith('https://www.redgifs.com/watch/')) {
+        // Не удалось получить прямую ссылку – используем downloadRedGif с прогрессом
         progressBar.style.display = 'block';
         progressBar.value = 0;
-        const progressCb = (percent) => {
+        saveBtn.disabled = true;
+        msgEl.textContent = 'Получение прямой ссылки...';
+        await downloadRedGif(currentVideoId, (percent) => {
           progressBar.value = percent;
-          showProgressNotification(percent);
-          msgEl.textContent = `Загружается: ${percent}%`;
-        };
+          msgEl.textContent = `Загрузка ${percent}%`;
+        });
+        progressBar.style.display = 'none';
+        saveBtn.disabled = false;
+        msgEl.textContent = 'Скачивание завершено!';
+        return;
+      }
 
-        const blob = await downloadFileWithProgress(videoUrl, filename, progressCb);
+      if (!currentDownloadUrl) return;
+      progressBar.style.display = 'block';
+      progressBar.value = 0;
+      saveBtn.disabled = true;
+      msgEl.textContent = 'Загрузка 0%';
+      try {
+        const blob = await downloadFileWithProgress(currentDownloadUrl, currentFilename, (percent) => {
+          progressBar.value = percent;
+          msgEl.textContent = `Загрузка ${percent}%`;
+        });
         const blobUrl = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = blobUrl;
-        a.download = filename;
+        a.download = currentFilename;
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
         URL.revokeObjectURL(blobUrl);
-
         progressBar.style.display = 'none';
-        hideProgressNotification();
+        saveBtn.disabled = false;
         msgEl.textContent = 'Скачивание завершено!';
       } catch (err) {
         console.error(err);
-        msgEl.textContent = 'Ошибка: ' + err.message;
         progressBar.style.display = 'none';
-        hideProgressNotification();
+        saveBtn.disabled = false;
+        msgEl.textContent = 'Ошибка загрузки. Попробуйте открыть видео и сохранить вручную.';
+        if (navigator.clipboard) {
+          navigator.clipboard.writeText(currentDownloadUrl).then(() => {
+            msgEl.textContent += ' Ссылка скопирована.';
+          });
+        }
       }
-    }
+    });
 
-    // Остальной код без изменений (isVideoPost, getVideoInfo, toggleBookmark, createCard...)
+    // Остальные функции (карточки, каталог, лента)
     function isVideoPost(data) {
       if (data.is_video) return true;
       if (data.domain === 'i.imgur.com' && data.url && data.url.endsWith('.gifv')) return true;
@@ -1015,7 +1043,22 @@
         downloadBtn.addEventListener('click', (e) => {
           e.stopPropagation(); e.preventDefault();
           if (isImage) {
-            // ... (без изменений)
+            const img = mediaElement.tagName === 'IMG' ? mediaElement : mediaElement.querySelector('img');
+            if (img && img.complete && img.naturalWidth > 0) {
+              const ext = downloadUrl.split('.').pop().split('?')[0] || 'jpg';
+              const filename = (title || 'image').replace(/[^a-z0-9]/gi, '_').substring(0, 30) + '.' + ext;
+              downloadImage(img, filename);
+            } else {
+              const tempImg = new Image();
+              tempImg.crossOrigin = 'anonymous';
+              tempImg.src = downloadUrl;
+              tempImg.onload = () => {
+                const ext = downloadUrl.split('.').pop().split('?')[0] || 'jpg';
+                const filename = (title || 'image').replace(/[^a-z0-9]/gi, '_').substring(0, 30) + '.' + ext;
+                downloadImage(tempImg, filename);
+              };
+              tempImg.onerror = () => window.open(downloadUrl, '_blank');
+            }
           } else if (redgifsVideoId) {
             if (mediaElement.classList.contains('redgifs-preview')) {
               const iframe = document.createElement('iframe');
@@ -1421,23 +1464,20 @@
       if (e.target === starsModal) starsModal.classList.remove('open');
     });
 
-    // Скачивальщик по ссылке
+    // Скачивальщик по ссылке (модалка)
     const downloadToolModal = document.getElementById('downloadToolModal');
     const closeDownloadToolBtn = document.getElementById('closeDownloadToolBtn');
     document.getElementById('openDownloadToolBtn').addEventListener('click', () => {
       downloadToolModal.classList.add('open');
-      document.getElementById('downloadToolMessage').textContent = '';
+      msgEl.textContent = '';
       document.getElementById('downloadLinkInput').value = '';
-      document.getElementById('downloadPlayer').style.display = 'none';
-      document.getElementById('downloadProgress').style.display = 'none';
+      player.style.display = 'none';
+      progressBar.style.display = 'none';
+      saveBtn.style.display = 'none';
     });
     closeDownloadToolBtn.addEventListener('click', () => downloadToolModal.classList.remove('open'));
     downloadToolModal.addEventListener('click', (e) => {
       if (e.target === downloadToolModal) downloadToolModal.classList.remove('open');
-    });
-    document.getElementById('downloadLinkBtn').addEventListener('click', () => {
-      const link = document.getElementById('downloadLinkInput').value.trim();
-      if (link) downloadByLink(link);
     });
 
     // Лента и прочее
@@ -1627,4 +1667,4 @@
   })();
   </script>
 </body>
-</html>
+  </html>
