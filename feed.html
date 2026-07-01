@@ -237,7 +237,7 @@
 
   <script>
   (function() {
-    // Основной канал – mix с дополнениями
+    // Основной канал – теперь объединяет всё
     const CHANNELS = {
       mix: [
         'GoneWild','RealGirls','Nude_Selfie','PetiteGoneWild','BustyPetite','AltGirls','altgonewild','gothsluts','emogirls','tattoo',
@@ -257,19 +257,19 @@
         'CamGirls','LiveCamBabes','WebcamGirlsNSFW','CamSluts','Chaturbates',
         'HighResNSFW','ArtisticNudes','EroticLuxury','ClassyPorn','NSFW_Photography','BoudoirPhotography',
         'HentaiArt','Hentai','AnimeNudes','Ecchi',
-        'AsianHotties','AsianNudes','PAWG','theratio','asstastic','pantyhose','stockings','tightdresses','girlsinleggings'
+        'AsianHotties','AsianNudes','PAWG','theratio','asstastic','pantyhose','stockings','tightdresses','girlsinleggings',
+        // Добавляем все порно-сабреддиты
+        'NSFW_GIF','porn_gifs','nsfw_gif','porninfifteenseconds','60fpsporn','nsfw_html5','adultgifs','hardcore','porn','nsfw',
+        'cumsluts','LegalTeens','Blowjobs','deepthroat','anal','creampie','pussy','ass','pornvids','PornStarHQ','PornStars',
+        'HighQualityGifs','porn_gifs','NSFW_GIF','porninfifteenseconds','adultgifs','pornvids','hardcore','porn',
+        'squirting','squirting_gifs','anal_gifs','blowjob_gifs','titfuck','lesbian_gifs','bondage','bdsm_gifs','gangbang',
+        'dp_porn','threesome','creampies','cumshots','facial','ruinedorgasms','nsfw_gif','pornID','pussy','boobs','tits','ass',
+        'lesbians','porn_gifs','adultgifs','nsfw_html5','gifsgonewild','pornwithsound'
       ]
     };
 
-    // Сабреддиты для порно-микса
-    const PORNO_SUBS = [
-      'NSFW_GIF','porn_gifs','nsfw_gif','porninfifteenseconds','60fpsporn','nsfw_html5','adultgifs','hardcore','porn','nsfw',
-      'cumsluts','LegalTeens','Blowjobs','deepthroat','anal','creampie','pussy','ass','pornvids','PornStarHQ','PornStars',
-      'HighQualityGifs','porn_gifs','NSFW_GIF','porninfifteenseconds','adultgifs','pornvids','hardcore','porn',
-      'squirting','squirting_gifs','anal_gifs','blowjob_gifs','titfuck','lesbian_gifs','bondage','bdsm_gifs','gangbang',
-      'dp_porn','threesome','creampies','cumshots','facial','ruinedorgasms','nsfw_gif','pornID','pussy','boobs','tits','ass',
-      'lesbians','porn_gifs','adultgifs','nsfw_html5','gifsgonewild','pornwithsound'
-    ];
+    // Сабреддиты для порно-микса (теперь не нужна отдельная переменная, но оставлю для обратной совместимости)
+    const PORNO_SUBS = CHANNELS.mix; // можно просто использовать mix
 
     const STARS_DATA = {
       pornstars: [
@@ -302,7 +302,10 @@
         { name: 'Jynx Maze', country: 'США' },
         { name: 'Elsa Jean', country: 'США' },
         { name: 'Gabbie Carter', country: 'США' },
-        { name: 'Autumn Falls', country: 'США' }
+        { name: 'Autumn Falls', country: 'США' },
+        { name: 'Karlee Grey', country: 'США' },
+        { name: 'Ariana Marie', country: 'США' },
+        { name: 'Savannah Bond', country: 'Австралия' }
       ],
       home: [
         { name: 'Amouranth', country: 'США' },
@@ -312,7 +315,9 @@
         { name: 'Jem Wolfie', country: 'Австралия' },
         { name: 'Corinna Kopf', country: 'США' },
         { name: 'Neiva Mara', country: 'Испания' },
-        { name: 'Morgpie', country: 'США' }
+        { name: 'Morgpie', country: 'США' },
+        { name: 'Belle Delphine', country: 'Великобритания' },
+        { name: 'Mati Marroni', country: 'США' }
       ]
     };
 
@@ -330,7 +335,11 @@
       { label: '💥 Оргазм', query: 'orgasm' },
       { label: '🎞️ Компиляции', query: 'compilation' },
       { label: '👩‍🦳 Милфы', query: 'milf' },
-      { label: '💕 Нежное', query: 'passionate' }
+      { label: '💕 Нежное', query: 'passionate' },
+      { label: '🦇 Альтушки', query: 'alt girl goth punk' },
+      { label: '🧼 Clean Girl', query: 'clean girl aesthetic' },
+      { label: '🌃 Street Girl', query: 'street girl fashion' },
+      { label: '🔞 Молодые', query: 'barely legal teen' }
     ];
 
     const BLOCKED_WORDS = [
@@ -349,7 +358,7 @@
     }
 
     let currentChannel = 'mix';
-    const STORAGE_KEY = 'liquid_feed_final_v11';
+    const STORAGE_KEY = 'liquid_feed_final_v12';
     const SEEN_MAX = 10000;
     const MAX_DOM_CARDS = 40;
     const RECENT_SUB_LIMIT = 15;
@@ -874,34 +883,33 @@
       return 'data:image/svg+xml,' + encodeURIComponent(svg);
     }
 
-    // Универсальная загрузка видео в контейнер с кнопкой "Загрузить ещё"
-    async function loadVideoBlock({ query, subreddit, container, loadMoreCallback }) {
-      container.innerHTML = '<div class="skeleton"></div>';
+    // Универсальная загрузка видео с пагинацией
+    async function loadVideoBlock({ query, subreddit, container, after = null, loadMoreCallback }) {
       try {
         let path;
         if (subreddit) {
           path = `/r/${subreddit}/hot.json?limit=25`;
+          if (after) path += `&after=${after}`;
         } else if (query) {
           const encoded = encodeURIComponent(query + ' nsfw:yes');
-          path = `/search.json?q=${encoded}&limit=25&include_over_18=on`;
+          path = `/search.json?q=${encoded}&limit=25&include_over_18=on&sort=new`;
+          if (after) path += `&after=${after}`;
         } else {
           throw new Error('No query or subreddit');
         }
         const json = await jsonp(path, 'videoBlockCallback');
-        const posts = json.data.children;
-        container.innerHTML = '';
-        if (posts.length === 0) {
-          container.innerHTML = '<p style="color:#888; text-align:center;">Ничего не найдено.</p>';
-          return;
-        }
+        const children = json.data.children;
+        const newAfter = json.data.after;
+        // Перемешиваем для случайного порядка
+        const shuffled = shuffle([...children]);
         const fragment = document.createDocumentFragment();
-        posts.forEach(post => {
+        shuffled.forEach(post => {
           const card = createCard(post);
           if (card) fragment.appendChild(card);
         });
         container.appendChild(fragment);
-        // Кнопка "Загрузить ещё"
-        if (loadMoreCallback) {
+
+        if (newAfter && loadMoreCallback) {
           const btn = document.createElement('button');
           btn.textContent = 'Загрузить ещё';
           btn.className = 'category-btn';
@@ -909,7 +917,7 @@
           btn.style.display = 'block';
           btn.addEventListener('click', () => {
             btn.remove();
-            loadMoreCallback();
+            loadMoreCallback(newAfter); // передаём after
           });
           container.appendChild(btn);
         }
@@ -918,26 +926,32 @@
       }
     }
 
-    // Порно-микс: случайный саб из PORNO_SUBS
+    // Порно-микс: случайный саб из CHANNELS.mix
     function loadPornoMix(container) {
-      const randomSub = PORNO_SUBS[Math.floor(Math.random() * PORNO_SUBS.length)];
+      const randomSub = CHANNELS.mix[Math.floor(Math.random() * CHANNELS.mix.length)];
       starsModalTitle.textContent = '🍿 Порно микс';
       container.innerHTML = '';
       loadVideoBlock({
         subreddit: randomSub,
         container: container,
-        loadMoreCallback: () => loadPornoMix(container)
+        loadMoreCallback: (after) => loadVideoBlock({
+          subreddit: randomSub,
+          container: container,
+          after: after,
+          loadMoreCallback: (after) => loadVideoBlock({ subreddit: randomSub, container, after, loadMoreCallback: arguments.callee }) // обеспечиваем цепочку
+        })
       });
     }
 
-    // Жанры
-    function loadGenre(genre, container) {
+    // Жанры с поддержкой пагинации
+    function loadGenre(genre, container, after = null) {
       starsModalTitle.textContent = genre.label;
-      container.innerHTML = '';
+      if (!after) container.innerHTML = ''; // очищаем только при первом вызове
       loadVideoBlock({
         query: genre.query,
         container: container,
-        loadMoreCallback: () => loadGenre(genre, container)
+        after: after,
+        loadMoreCallback: (newAfter) => loadGenre(genre, container, newAfter)
       });
     }
 
@@ -1005,7 +1019,12 @@
           const videoContainer = document.createElement('div');
           container.appendChild(videoContainer);
           document.getElementById('backToStarsFromVideo').addEventListener('click', () => showStarsByCategory(categoryKey, container));
-          loadVideoBlock({ query: star.name, container: videoContainer, loadMoreCallback: () => loadVideoBlock({ query: star.name, container: videoContainer, loadMoreCallback: () => {} }) });
+          // Загрузка видео звезды с пагинацией
+          loadVideoBlock({
+            query: star.name,
+            container: videoContainer,
+            loadMoreCallback: (after) => loadVideoBlock({ query: star.name, container: videoContainer, after, loadMoreCallback: arguments.callee })
+          });
         });
         grid.appendChild(card);
       });
