@@ -151,16 +151,21 @@
     }
     .modal-close:hover { color: #fff; }
 
-    /* Сетка звёзд */
+    /* Сетка звёзд – строго 2 в ряд */
     .stars-grid {
-      display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 1rem;
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 1rem;
     }
     .star-card {
       background: rgba(255,255,255,0.05); border-radius: 16px; overflow: hidden;
       border: 1px solid rgba(255,255,255,0.08); cursor: pointer; transition: transform 0.2s; text-align: center;
     }
     .star-card:hover { transform: scale(1.03); }
-    .star-card img { width: 100%; aspect-ratio: 3/4; object-fit: cover; background: #000; }
+    .star-card .star-img {
+      width: 100%; aspect-ratio: 3/4; background: #1a1a2e; display: flex; align-items: center; justify-content: center;
+      font-size: 2rem; color: #fff; font-weight: bold; text-transform: uppercase;
+    }
     .star-card .star-info { padding: 0.5rem; }
     .star-card .star-name { font-weight: 500; color: #fff; }
     .star-card .star-country { font-size: 0.75rem; color: #aaa; }
@@ -228,7 +233,7 @@
 
   <!-- Модалка Порно-каталога -->
   <div class="stars-modal" id="starsModal">
-    <div class="modal-content" id="starsModalContent">
+    <div class="modal-content" id="starsModalContent" style="position:relative;">
       <h2 id="starsModalTitle">🎬 Порно</h2>
       <button class="modal-close" id="closeStarsModal" style="position:absolute; top:1rem; right:1rem; z-index:5;">&times;</button>
       <div id="starsContainer"></div>
@@ -239,7 +244,7 @@
 
   <script>
   (function() {
-    // Основной канал только mix
+    // Основной канал – только mix
     const CHANNELS = {
       mix: [
         'GoneWild','RealGirls','Nude_Selfie','PetiteGoneWild','BustyPetite','AltGirls','altgonewild','gothsluts','emogirls','tattoo',
@@ -262,37 +267,50 @@
       ]
     };
 
-    // База данных звёзд по категориям
+    // Категории звёзд: порнозвёзды и домашнее (вебкам + любительницы)
     const STARS_DATA = {
       pornstars: [
-        { name: 'Angela White', country: 'Австралия', photo: 'https://i.imgur.com/JTZqNUr.jpg', query: 'Angela White' },
-        { name: 'Mia Khalifa', country: 'Ливан / США', photo: 'https://i.imgur.com/OfxLQ8q.jpg', query: 'Mia Khalifa' },
-        { name: 'Riley Reid', country: 'США', photo: 'https://i.imgur.com/8Nrz2CW.jpg', query: 'Riley Reid' },
-        { name: 'Lana Rhoades', country: 'США', photo: 'https://i.imgur.com/Q0A8uJs.jpg', query: 'Lana Rhoades' },
-        { name: 'Belle Delphine', country: 'Великобритания', photo: 'https://i.imgur.com/dGLqTgJ.jpg', query: 'Belle Delphine' },
-        { name: 'Valentina Nappi', country: 'Италия', photo: 'https://i.imgur.com/pSmZx7b.jpg', query: 'Valentina Nappi' },
-        { name: 'Abella Danger', country: 'США', photo: 'https://i.imgur.com/X4Yb1Uf.jpg', query: 'Abella Danger' },
-        { name: 'Asa Akira', country: 'США', photo: 'https://i.imgur.com/MqTn2RW.jpg', query: 'Asa Akira' },
-        { name: 'Brandi Love', country: 'США', photo: 'https://i.imgur.com/TgY3Eqo.jpg', query: 'Brandi Love' },
-        { name: 'Rae Lil Black', country: 'Япония', photo: 'https://i.imgur.com/fNkFtcY.jpg', query: 'Rae Lil Black' },
-        { name: 'Dillion Harper', country: 'США', photo: 'https://i.imgur.com/Yv3FmhG.jpg', query: 'Dillion Harper' },
-        { name: 'Little Caprice', country: 'Чехия', photo: 'https://i.imgur.com/NYVHj1W.jpg', query: 'Little Caprice' }
+        { name: 'Eva Elfie', country: 'Россия' },
+        { name: 'Sweetie Fox', country: 'Россия' },
+        { name: 'Diana Rider', country: 'Россия' },
+        { name: 'Liya Silver', country: 'Россия' },
+        { name: 'Gina Gerson', country: 'Россия' },
+        { name: 'Henessy', country: 'Россия' },
+        { name: 'Nancy Ace', country: 'Россия' },
+        { name: 'Angela White', country: 'Австралия' },
+        { name: 'Mia Khalifa', country: 'Ливан / США' },
+        { name: 'Riley Reid', country: 'США' },
+        { name: 'Lana Rhoades', country: 'США' },
+        { name: 'Abella Danger', country: 'США' },
+        { name: 'Valentina Nappi', country: 'Италия' },
+        { name: 'Little Caprice', country: 'Чехия' },
+        { name: 'Rae Lil Black', country: 'Япония' },
+        { name: 'Dillion Harper', country: 'США' },
+        { name: 'Brandi Love', country: 'США' },
+        { name: 'Kendra Lust', country: 'США' },
+        { name: 'Nicole Aniston', country: 'США' },
+        { name: 'Madison Ivy', country: 'США' },
+        { name: 'Tori Black', country: 'США' },
+        { name: 'Alexis Texas', country: 'США' },
+        { name: 'Adriana Chechik', country: 'США' },
+        { name: 'Sasha Grey', country: 'США' },
+        { name: 'Stoya', country: 'США' },
+        { name: 'Asa Akira', country: 'США' },
+        { name: 'Jynx Maze', country: 'США' },
+        { name: 'Elsa Jean', country: 'США' },
+        { name: 'Gabbie Carter', country: 'США' },
+        { name: 'Autumn Falls', country: 'США' },
+        { name: 'Kelsi Monroe', country: 'США' }
       ],
-      webcam: [
-        { name: 'Amouranth', country: 'США', photo: 'https://i.imgur.com/sXBzOVo.jpg', query: 'Amouranth' },
-        { name: 'Pokimane', country: 'Канада', photo: 'https://i.imgur.com/L9uZXMl.jpg', query: 'Pokimane NSFW' },
-        { name: 'Alinity', country: 'Канада', photo: 'https://i.imgur.com/C3FfX0F.jpg', query: 'Alinity NSFW' },
-        { name: 'STPeach', country: 'США', photo: 'https://i.imgur.com/nM15c7Z.jpg', query: 'STPeach' },
-        { name: 'Jem Wolfie', country: 'Австралия', photo: 'https://i.imgur.com/kyjT5lx.jpg', query: 'Jem Wolfie' },
-        { name: 'Corinna Kopf', country: 'США', photo: 'https://i.imgur.com/C6mArMl.jpg', query: 'Corinna Kopf' },
-        { name: 'Neiva Mara', country: 'Испания', photo: 'https://i.imgur.com/0XqG6NJ.jpg', query: 'Neiva Mara' }
-      ],
-      amateurs: [
-        { name: 'Gabbie Carter', country: 'США', photo: 'https://i.imgur.com/3hPwKzN.jpg', query: 'Gabbie Carter' },
-        { name: 'Autumn Falls', country: 'США', photo: 'https://i.imgur.com/YX1Omfg.jpg', query: 'Autumn Falls' },
-        { name: 'Eva Elfie', country: 'Россия', photo: 'https://i.imgur.com/hWm1qBq.jpg', query: 'Eva Elfie' },
-        { name: 'Liya Silver', country: 'Россия', photo: 'https://i.imgur.com/5cKv2aT.jpg', query: 'Liya Silver' },
-        { name: 'Morgpie', country: 'США', photo: 'https://i.imgur.com/vT5Kf8o.jpg', query: 'Morgpie' }
+      home: [
+        { name: 'Amouranth', country: 'США' },
+        { name: 'Pokimane', country: 'Канада' },
+        { name: 'Alinity', country: 'Канада' },
+        { name: 'STPeach', country: 'США' },
+        { name: 'Jem Wolfie', country: 'Австралия' },
+        { name: 'Corinna Kopf', country: 'США' },
+        { name: 'Neiva Mara', country: 'Испания' },
+        { name: 'Morgpie', country: 'США' }
       ]
     };
 
@@ -312,7 +330,7 @@
     }
 
     let currentChannel = 'mix';
-    const STORAGE_KEY = 'liquid_feed_final_v9';
+    const STORAGE_KEY = 'liquid_feed_final_v10';
     const SEEN_MAX = 10000;
     const MAX_DOM_CARDS = 40;
     const RECENT_SUB_LIMIT = 15;
@@ -826,6 +844,17 @@
       }
     }
 
+    // Генератор SVG-заглушки для фото звезды
+    function createStarPlaceholder(name, country) {
+      const initials = name.split(' ').map(w => w.charAt(0)).join('').slice(0, 2);
+      const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 120" width="100%" height="100%">
+        <rect fill="#1a1a2e" width="100" height="120" rx="8"/>
+        <text fill="#f0a0c0" font-size="20" font-weight="bold" text-anchor="middle" x="50" y="55">${initials}</text>
+        <text fill="#aaa" font-size="10" text-anchor="middle" x="50" y="80">${country}</text>
+      </svg>`;
+      return 'data:image/svg+xml,' + encodeURIComponent(svg);
+    }
+
     // Общая функция загрузки видео по поисковому запросу в указанный контейнер
     async function loadStarVideos(query, container) {
       container.innerHTML = '<div class="skeleton"></div>';
@@ -863,8 +892,7 @@
       btnContainer.className = 'category-buttons';
       const categories = [
         { key: 'pornstars', label: 'Порнозвёзды' },
-        { key: 'webcam', label: 'Вебкам' },
-        { key: 'amateurs', label: 'Любительницы' }
+        { key: 'home', label: 'Домашнее' }
       ];
       categories.forEach(cat => {
         const btn = document.createElement('button');
@@ -879,18 +907,20 @@
     function showStarsByCategory(categoryKey) {
       const stars = STARS_DATA[categoryKey];
       if (!stars) return;
-      starsModalTitle.textContent = categoryKey === 'pornstars' ? 'Порнозвёзды' : categoryKey === 'webcam' ? 'Вебкам' : 'Любительницы';
+      starsModalTitle.textContent = categoryKey === 'pornstars' ? 'Порнозвёзды' : 'Домашнее';
       starsContainer.innerHTML = '<button class="category-btn" id="backToCategories" style="margin-bottom:1rem;">← Назад к категориям</button>';
       const grid = document.createElement('div');
       grid.className = 'stars-grid';
       stars.forEach(star => {
         const card = document.createElement('div');
         card.className = 'star-card';
-        const img = document.createElement('img');
-        img.src = star.photo;
-        img.alt = star.name;
-        img.onerror = () => { img.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"%3E%3Crect fill="%23333" width="100" height="100"/%3E%3Ctext fill="%23aaa" x="10" y="55" font-size="12"%3E' + star.name + '%3C/text%3E%3C/svg%3E'; };
-        card.appendChild(img);
+        const imgDiv = document.createElement('div');
+        imgDiv.className = 'star-img';
+        imgDiv.style.backgroundImage = `url('${createStarPlaceholder(star.name, star.country)}')`;
+        imgDiv.style.backgroundSize = 'cover';
+        imgDiv.style.backgroundPosition = 'center';
+        // Альтернативный текст, если не загрузится (но у нас data URI, так что всегда ок)
+        card.appendChild(imgDiv);
         const info = document.createElement('div');
         info.className = 'star-info';
         info.innerHTML = `<div class="star-name">${star.name}</div><div class="star-country">${star.country}</div>`;
@@ -909,7 +939,7 @@
       videoContainer.id = 'starVideoContainer';
       starsContainer.appendChild(videoContainer);
       document.getElementById('backToStars').addEventListener('click', () => showStarsByCategory(getCurrentCategoryFromStar(star)));
-      loadStarVideos(star.query, videoContainer);
+      loadStarVideos(star.name, videoContainer);
     }
 
     function getCurrentCategoryFromStar(star) {
