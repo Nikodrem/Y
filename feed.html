@@ -385,7 +385,7 @@
     }
 
     let currentChannel = 'mix';
-    const STORAGE_KEY = 'liquid_feed_final_v16';
+    const STORAGE_KEY = 'liquid_feed_final_v17';
     const SEEN_MAX = 10000;
     const MAX_DOM_CARDS = 40;
     const RECENT_SUB_LIMIT = 15;
@@ -566,55 +566,61 @@
       window.open(url, '_blank');
     }
 
-    // Универсальный скачивальщик RedGIFs с перебором прокси
-    async function downloadRedGif(videoId) {
-      const apiUrl = `https://api.redgifs.com/v2/gifs/${videoId}`;
-
-      // Список CORS-прокси
-      const proxyList = [
+    // Новая функция скачивания RedGIFs через парсинг страницы
+    async function downloadRedGif(videoId, showPlayer = true) {
+      const pageProxies = [
         (url) => `https://corsproxy.io/?url=${encodeURIComponent(url)}`,
         (url) => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
-        (url) => `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(url)}`,
-        (url) => `https://cors.eu.org/${encodeURIComponent(url)}`
+        (url) => `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(url)}`
       ];
 
-      let videoData = null;
+      let html = null;
+      const watchUrl = `https://www.redgifs.com/watch/${videoId}`;
 
-      // Пытаемся получить JSON с информацией о видео
-      for (const proxy of proxyList) {
+      // Пытаемся загрузить HTML страницы
+      for (const proxy of pageProxies) {
         try {
-          const response = await fetch(proxy(apiUrl));
+          const response = await fetch(proxy(watchUrl));
           if (response.ok) {
-            videoData = await response.json();
+            html = await response.text();
             break;
           }
         } catch (e) {}
       }
 
-      if (!videoData || !videoData.urls) {
-        // Если не удалось получить данные — открываем прямую ссылку для скачивания
-        const directUrl = `https://api.redgifs.com/v2/gifs/${videoId}`;
-        window.open(directUrl, '_blank');
-        // Дополнительно: копируем ссылку в буфер
-        if (navigator.clipboard) {
-          navigator.clipboard.writeText(directUrl).then(() => {
-            alert('Не удалось загрузить автоматически.\nПрямая ссылка скопирована в буфер обмена. Вставьте её в менеджер загрузок.');
-          });
-        } else {
-          alert('Не удалось загрузить автоматически. Откройте ссылку в новой вкладке и сохраните видео вручную.');
+      // Ищем прямую ссылку на видео в HTML
+      let videoUrl = null;
+      if (html) {
+        // Ищем JSON-данные внутри тегов script
+        const jsonMatch = html.match(/<script[^>]*type="application\/json"[^>]*>(.*?)<\/script>/g);
+        if (jsonMatch) {
+          for (const match of jsonMatch) {
+            const jsonStr = match.replace(/<script[^>]*>/, '').replace('</script>', '');
+            try {
+              const data = JSON.parse(jsonStr);
+              if (data?.video?.urls?.hd || data?.video?.urls?.sd) {
+                videoUrl = data.video.urls.hd || data.video.urls.sd;
+                break;
+              }
+            } catch (e) {}
+          }
         }
-        return;
+        // Если не нашли JSON, пробуем найти через регулярку
+        if (!videoUrl) {
+          const urlMatch = html.match(/https:\/\/thumbs\d+\.redgifs\.com\/[a-zA-Z0-9]+\.mp4/);
+          if (urlMatch) videoUrl = urlMatch[0];
+        }
       }
 
-      const videoUrl = videoData.urls.hd || videoData.urls.sd;
       if (!videoUrl) {
-        alert('Не удалось получить ссылку на видео.');
+        // Не смогли найти видео — открываем страницу в новой вкладке
+        window.open(watchUrl, '_blank');
         return;
       }
 
-      // Скачиваем видео через прокси
+      // Скачиваем видео
       let blob = null;
-      for (const proxy of proxyList) {
+      for (const proxy of pageProxies) {
         try {
           const response = await fetch(proxy(videoUrl));
           blob = await response.blob();
@@ -623,13 +629,7 @@
       }
 
       if (!blob || blob.size === 0) {
-        // Открываем прямую ссылку на видео
         window.open(videoUrl, '_blank');
-        if (navigator.clipboard) {
-          navigator.clipboard.writeText(videoUrl).then(() => {
-            alert('Видео не удалось загрузить автоматически.\nПрямая ссылка скопирована в буфер обмена.');
-          });
-        }
         return;
       }
 
@@ -668,7 +668,7 @@
           const match = link.match(/watch\/([a-zA-Z0-9]+)/);
           if (match) {
             const videoId = match[1];
-            await downloadRedGif(videoId);
+            await downloadRedGif(videoId, false);
             msgEl.textContent = 'Скачивание началось!';
             return;
           }
@@ -875,6 +875,7 @@
         card.appendChild(bookmarkBtn);
       }
 
+      // Кнопка скачать (RedGIFs обрабатывается отдельно)
       if (redgifsVideoId || downloadUrl) {
         const downloadBtn = document.createElement('button');
         downloadBtn.className = 'download-btn';
@@ -899,7 +900,23 @@
               tempImg.onerror = () => window.open(downloadUrl, '_blank');
             }
           } else if (redgifsVideoId) {
+            // Сначала запускаем плеер, потом загрузку
+            if (mediaElement.classList.contains('redgifs-preview')) {
+              // Ещё не открыт плеер – открываем
+              const iframe = document.createElement('iframe');
+              iframe.src = `https://www.redgifs.com/ifr/${redgifsVideoId}`;
+              iframe.allowFullscreen = true;
+              iframe.allow = 'autoplay; fullscreen';
+              iframe.referrerPolicy = 'no-referrer';
+              iframe.loading = 'lazy';
+              mediaElement.innerHTML = '';
+              mediaElement.appendChild(iframe);
+              mediaElement.classList.remove('redgifs-preview');
+            }
+            // Запускаем скачивание в фоне
             downloadRedGif(redgifsVideoId);
+            downloadBtn.textContent = '⏳ Загружается...';
+            downloadBtn.disabled = true;
           } else {
             downloadVideo(downloadUrl);
           }
