@@ -385,7 +385,7 @@
     }
 
     let currentChannel = 'mix';
-    const STORAGE_KEY = 'liquid_feed_final_v17';
+    const STORAGE_KEY = 'liquid_feed_final_v18';
     const SEEN_MAX = 10000;
     const MAX_DOM_CARDS = 40;
     const RECENT_SUB_LIMIT = 15;
@@ -566,8 +566,8 @@
       window.open(url, '_blank');
     }
 
-    // Новая функция скачивания RedGIFs через парсинг страницы
-    async function downloadRedGif(videoId, showPlayer = true) {
+    // Исправленная функция скачивания RedGIFs
+    async function downloadRedGif(videoId) {
       const pageProxies = [
         (url) => `https://corsproxy.io/?url=${encodeURIComponent(url)}`,
         (url) => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
@@ -577,7 +577,6 @@
       let html = null;
       const watchUrl = `https://www.redgifs.com/watch/${videoId}`;
 
-      // Пытаемся загрузить HTML страницы
       for (const proxy of pageProxies) {
         try {
           const response = await fetch(proxy(watchUrl));
@@ -588,24 +587,20 @@
         } catch (e) {}
       }
 
-      // Ищем прямую ссылку на видео в HTML
       let videoUrl = null;
       if (html) {
-        // Ищем JSON-данные внутри тегов script
-        const jsonMatch = html.match(/<script[^>]*type="application\/json"[^>]*>(.*?)<\/script>/g);
-        if (jsonMatch) {
-          for (const match of jsonMatch) {
-            const jsonStr = match.replace(/<script[^>]*>/, '').replace('</script>', '');
-            try {
-              const data = JSON.parse(jsonStr);
-              if (data?.video?.urls?.hd || data?.video?.urls?.sd) {
-                videoUrl = data.video.urls.hd || data.video.urls.sd;
-                break;
-              }
-            } catch (e) {}
-          }
+        // Ищем JSON-данные в тегах script
+        const jsonRegex = /<script[^>]*type="application\/json"[^>]*>([\s\S]*?)<\/script>/g;
+        let match;
+        while ((match = jsonRegex.exec(html)) !== null) {
+          try {
+            const data = JSON.parse(match[1]);
+            if (data?.video?.urls?.hd || data?.video?.urls?.sd) {
+              videoUrl = data.video.urls.hd || data.video.urls.sd;
+              break;
+            }
+          } catch (e) {}
         }
-        // Если не нашли JSON, пробуем найти через регулярку
         if (!videoUrl) {
           const urlMatch = html.match(/https:\/\/thumbs\d+\.redgifs\.com\/[a-zA-Z0-9]+\.mp4/);
           if (urlMatch) videoUrl = urlMatch[0];
@@ -613,12 +608,10 @@
       }
 
       if (!videoUrl) {
-        // Не смогли найти видео — открываем страницу в новой вкладке
         window.open(watchUrl, '_blank');
         return;
       }
 
-      // Скачиваем видео
       let blob = null;
       for (const proxy of pageProxies) {
         try {
@@ -643,7 +636,6 @@
       URL.revokeObjectURL(blobUrl);
     }
 
-    // Скачать видео по ссылке (Reddit, RedGIFs, Imgur)
     async function downloadByLink(link) {
       const msgEl = document.getElementById('downloadToolMessage');
       msgEl.textContent = 'Обработка ссылки...';
@@ -668,7 +660,7 @@
           const match = link.match(/watch\/([a-zA-Z0-9]+)/);
           if (match) {
             const videoId = match[1];
-            await downloadRedGif(videoId, false);
+            await downloadRedGif(videoId);
             msgEl.textContent = 'Скачивание началось!';
             return;
           }
@@ -875,7 +867,7 @@
         card.appendChild(bookmarkBtn);
       }
 
-      // Кнопка скачать (RedGIFs обрабатывается отдельно)
+      // Кнопка скачать
       if (redgifsVideoId || downloadUrl) {
         const downloadBtn = document.createElement('button');
         downloadBtn.className = 'download-btn';
@@ -900,9 +892,8 @@
               tempImg.onerror = () => window.open(downloadUrl, '_blank');
             }
           } else if (redgifsVideoId) {
-            // Сначала запускаем плеер, потом загрузку
+            // Сначала открываем плеер, если еще не открыт
             if (mediaElement.classList.contains('redgifs-preview')) {
-              // Ещё не открыт плеер – открываем
               const iframe = document.createElement('iframe');
               iframe.src = `https://www.redgifs.com/ifr/${redgifsVideoId}`;
               iframe.allowFullscreen = true;
@@ -913,7 +904,6 @@
               mediaElement.appendChild(iframe);
               mediaElement.classList.remove('redgifs-preview');
             }
-            // Запускаем скачивание в фоне
             downloadRedGif(redgifsVideoId);
             downloadBtn.textContent = '⏳ Загружается...';
             downloadBtn.disabled = true;
