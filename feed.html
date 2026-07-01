@@ -385,7 +385,7 @@
     }
 
     let currentChannel = 'mix';
-    const STORAGE_KEY = 'liquid_feed_final_v15';
+    const STORAGE_KEY = 'liquid_feed_final_v16';
     const SEEN_MAX = 10000;
     const MAX_DOM_CARDS = 40;
     const RECENT_SUB_LIMIT = 15;
@@ -566,32 +566,53 @@
       window.open(url, '_blank');
     }
 
-    // Универсальный скачивальщик RedGIFs (без fallback-плеера)
+    // Универсальный скачивальщик RedGIFs с перебором прокси
     async function downloadRedGif(videoId) {
+      const apiUrl = `https://api.redgifs.com/v2/gifs/${videoId}`;
+
+      // Список CORS-прокси
       const proxyList = [
         (url) => `https://corsproxy.io/?url=${encodeURIComponent(url)}`,
-        (url) => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`
+        (url) => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
+        (url) => `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(url)}`,
+        (url) => `https://cors.eu.org/${encodeURIComponent(url)}`
       ];
 
-      let videoUrl = null;
+      let videoData = null;
 
-      // Получаем данные через API RedGIFs
+      // Пытаемся получить JSON с информацией о видео
       for (const proxy of proxyList) {
         try {
-          const apiUrl = `https://api.redgifs.com/v2/gifs/${videoId}`;
           const response = await fetch(proxy(apiUrl));
-          const data = await response.json();
-          videoUrl = data.urls?.hd || data.urls?.sd;
-          if (videoUrl) break;
+          if (response.ok) {
+            videoData = await response.json();
+            break;
+          }
         } catch (e) {}
       }
 
-      if (!videoUrl) {
-        alert('Не удалось получить ссылку на видео. Возможно, прокси недоступны.');
+      if (!videoData || !videoData.urls) {
+        // Если не удалось получить данные — открываем прямую ссылку для скачивания
+        const directUrl = `https://api.redgifs.com/v2/gifs/${videoId}`;
+        window.open(directUrl, '_blank');
+        // Дополнительно: копируем ссылку в буфер
+        if (navigator.clipboard) {
+          navigator.clipboard.writeText(directUrl).then(() => {
+            alert('Не удалось загрузить автоматически.\nПрямая ссылка скопирована в буфер обмена. Вставьте её в менеджер загрузок.');
+          });
+        } else {
+          alert('Не удалось загрузить автоматически. Откройте ссылку в новой вкладке и сохраните видео вручную.');
+        }
         return;
       }
 
-      // Скачиваем сам видеофайл через прокси
+      const videoUrl = videoData.urls.hd || videoData.urls.sd;
+      if (!videoUrl) {
+        alert('Не удалось получить ссылку на видео.');
+        return;
+      }
+
+      // Скачиваем видео через прокси
       let blob = null;
       for (const proxy of proxyList) {
         try {
@@ -602,13 +623,13 @@
       }
 
       if (!blob || blob.size === 0) {
-        // В крайнем случае открываем прямую ссылку (может сработать на некоторых устройствах)
-        const a = document.createElement('a');
-        a.href = videoUrl;
-        a.download = `${videoId}.mp4`;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
+        // Открываем прямую ссылку на видео
+        window.open(videoUrl, '_blank');
+        if (navigator.clipboard) {
+          navigator.clipboard.writeText(videoUrl).then(() => {
+            alert('Видео не удалось загрузить автоматически.\nПрямая ссылка скопирована в буфер обмена.');
+          });
+        }
         return;
       }
 
@@ -647,7 +668,6 @@
           const match = link.match(/watch\/([a-zA-Z0-9]+)/);
           if (match) {
             const videoId = match[1];
-            // Используем ту же функцию скачивания RedGIFs
             await downloadRedGif(videoId);
             msgEl.textContent = 'Скачивание началось!';
             return;
@@ -855,7 +875,6 @@
         card.appendChild(bookmarkBtn);
       }
 
-      // Кнопка скачать (RedGIFs обрабатывается отдельно)
       if (redgifsVideoId || downloadUrl) {
         const downloadBtn = document.createElement('button');
         downloadBtn.className = 'download-btn';
@@ -1475,4 +1494,4 @@
   })();
   </script>
 </body>
-  </html>
+</html>
