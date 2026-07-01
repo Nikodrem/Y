@@ -132,7 +132,6 @@
     .download-btn:hover, .bookmark-btn:hover { background: rgba(214,51,108,0.8); }
     .bookmark-btn.bookmarked { background: #d6336c; border-color: #d6336c; }
 
-    /* Модальные окна */
     .cabinet-modal, .stars-modal {
       display: none;
       position: fixed; top: 0; left: 0; width: 100%; height: 100%;
@@ -151,12 +150,7 @@
     }
     .modal-close:hover { color: #fff; }
 
-    /* Сетка звёзд – строго 2 в ряд */
-    .stars-grid {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 1rem;
-    }
+    .stars-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; }
     .star-card {
       background: rgba(255,255,255,0.05); border-radius: 16px; overflow: hidden;
       border: 1px solid rgba(255,255,255,0.08); cursor: pointer; transition: transform 0.2s; text-align: center;
@@ -164,7 +158,6 @@
     .star-card:hover { transform: scale(1.03); }
     .star-card .star-img {
       width: 100%; aspect-ratio: 3/4; background: #1a1a2e; display: flex; align-items: center; justify-content: center;
-      font-size: 2rem; color: #fff; font-weight: bold; text-transform: uppercase;
     }
     .star-card .star-info { padding: 0.5rem; }
     .star-card .star-name { font-weight: 500; color: #fff; }
@@ -244,7 +237,7 @@
 
   <script>
   (function() {
-    // Основной канал – только mix
+    // Основной канал – mix с дополнениями
     const CHANNELS = {
       mix: [
         'GoneWild','RealGirls','Nude_Selfie','PetiteGoneWild','BustyPetite','AltGirls','altgonewild','gothsluts','emogirls','tattoo',
@@ -263,11 +256,21 @@
         'wildgirls','gonewildsmiles','GoneWildCurvy',
         'CamGirls','LiveCamBabes','WebcamGirlsNSFW','CamSluts','Chaturbates',
         'HighResNSFW','ArtisticNudes','EroticLuxury','ClassyPorn','NSFW_Photography','BoudoirPhotography',
-        'HentaiArt','Hentai','AnimeNudes','Ecchi'
+        'HentaiArt','Hentai','AnimeNudes','Ecchi',
+        'AsianHotties','AsianNudes','PAWG','theratio','asstastic','pantyhose','stockings','tightdresses','girlsinleggings'
       ]
     };
 
-    // Категории звёзд: порнозвёзды и домашнее (вебкам + любительницы)
+    // Сабреддиты для порно-микса
+    const PORNO_SUBS = [
+      'NSFW_GIF','porn_gifs','nsfw_gif','porninfifteenseconds','60fpsporn','nsfw_html5','adultgifs','hardcore','porn','nsfw',
+      'cumsluts','LegalTeens','Blowjobs','deepthroat','anal','creampie','pussy','ass','pornvids','PornStarHQ','PornStars',
+      'HighQualityGifs','porn_gifs','NSFW_GIF','porninfifteenseconds','adultgifs','pornvids','hardcore','porn',
+      'squirting','squirting_gifs','anal_gifs','blowjob_gifs','titfuck','lesbian_gifs','bondage','bdsm_gifs','gangbang',
+      'dp_porn','threesome','creampies','cumshots','facial','ruinedorgasms','nsfw_gif','pornID','pussy','boobs','tits','ass',
+      'lesbians','porn_gifs','adultgifs','nsfw_html5','gifsgonewild','pornwithsound'
+    ];
+
     const STARS_DATA = {
       pornstars: [
         { name: 'Eva Elfie', country: 'Россия' },
@@ -299,8 +302,7 @@
         { name: 'Jynx Maze', country: 'США' },
         { name: 'Elsa Jean', country: 'США' },
         { name: 'Gabbie Carter', country: 'США' },
-        { name: 'Autumn Falls', country: 'США' },
-        { name: 'Kelsi Monroe', country: 'США' }
+        { name: 'Autumn Falls', country: 'США' }
       ],
       home: [
         { name: 'Amouranth', country: 'США' },
@@ -313,6 +315,23 @@
         { name: 'Morgpie', country: 'США' }
       ]
     };
+
+    const GENRES = [
+      { label: '💦 Сквирт', query: 'squirt' },
+      { label: '🍑 Анал', query: 'anal' },
+      { label: '👄 Минет', query: 'blowjob' },
+      { label: '👇 Глубокий минет', query: 'deepthroat' },
+      { label: '💧 Кремпай', query: 'creampie' },
+      { label: '👩‍❤️‍💋‍👩 Лесби', query: 'lesbian' },
+      { label: '🌸 Мастурбация', query: 'masturbation' },
+      { label: '⛓️ БДСМ', query: 'bdsm' },
+      { label: '👥 Групповое', query: 'gangbang' },
+      { label: '🔁 Двойное проникновение', query: 'double penetration' },
+      { label: '💥 Оргазм', query: 'orgasm' },
+      { label: '🎞️ Компиляции', query: 'compilation' },
+      { label: '👩‍🦳 Милфы', query: 'milf' },
+      { label: '💕 Нежное', query: 'passionate' }
+    ];
 
     const BLOCKED_WORDS = [
       'gore', 'blood', 'kill', 'murder', 'death', 'dead', 'dying', 'violen', 'gun', 'knife', 'weapon',
@@ -330,7 +349,7 @@
     }
 
     let currentChannel = 'mix';
-    const STORAGE_KEY = 'liquid_feed_final_v10';
+    const STORAGE_KEY = 'liquid_feed_final_v11';
     const SEEN_MAX = 10000;
     const MAX_DOM_CARDS = 40;
     const RECENT_SUB_LIMIT = 15;
@@ -844,7 +863,7 @@
       }
     }
 
-    // Генератор SVG-заглушки для фото звезды
+    // Генератор SVG-заглушки
     function createStarPlaceholder(name, country) {
       const initials = name.split(' ').map(w => w.charAt(0)).join('').slice(0, 2);
       const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 120" width="100%" height="100%">
@@ -855,17 +874,24 @@
       return 'data:image/svg+xml,' + encodeURIComponent(svg);
     }
 
-    // Общая функция загрузки видео по поисковому запросу в указанный контейнер
-    async function loadStarVideos(query, container) {
+    // Универсальная загрузка видео в контейнер с кнопкой "Загрузить ещё"
+    async function loadVideoBlock({ query, subreddit, container, loadMoreCallback }) {
       container.innerHTML = '<div class="skeleton"></div>';
       try {
-        const encoded = encodeURIComponent(query + ' nsfw:yes');
-        const path = `/search.json?q=${encoded}&limit=25&include_over_18=on`;
-        const json = await jsonp(path, 'starVideoCallback');
+        let path;
+        if (subreddit) {
+          path = `/r/${subreddit}/hot.json?limit=25`;
+        } else if (query) {
+          const encoded = encodeURIComponent(query + ' nsfw:yes');
+          path = `/search.json?q=${encoded}&limit=25&include_over_18=on`;
+        } else {
+          throw new Error('No query or subreddit');
+        }
+        const json = await jsonp(path, 'videoBlockCallback');
         const posts = json.data.children;
         container.innerHTML = '';
         if (posts.length === 0) {
-          container.innerHTML = '<p style="color:#888; text-align:center;">Видео не найдены.</p>';
+          container.innerHTML = '<p style="color:#888; text-align:center;">Ничего не найдено.</p>';
           return;
         }
         const fragment = document.createDocumentFragment();
@@ -874,41 +900,90 @@
           if (card) fragment.appendChild(card);
         });
         container.appendChild(fragment);
+        // Кнопка "Загрузить ещё"
+        if (loadMoreCallback) {
+          const btn = document.createElement('button');
+          btn.textContent = 'Загрузить ещё';
+          btn.className = 'category-btn';
+          btn.style.margin = '1rem auto';
+          btn.style.display = 'block';
+          btn.addEventListener('click', () => {
+            btn.remove();
+            loadMoreCallback();
+          });
+          container.appendChild(btn);
+        }
       } catch (err) {
-        container.innerHTML = `<div class="error">Ошибка загрузки: ${err.message}</div>`;
+        container.innerHTML = `<div class="error">Ошибка: ${err.message}</div>`;
       }
     }
 
-    // Модальное окно Порно-каталога
-    const starsModal = document.getElementById('starsModal');
-    const starsContainer = document.getElementById('starsContainer');
-    const starsModalTitle = document.getElementById('starsModalTitle');
-    const closeStarsModal = document.getElementById('closeStarsModal');
-
-    function showCategories() {
-      starsModalTitle.textContent = '🎬 Порно';
-      starsContainer.innerHTML = '';
-      const btnContainer = document.createElement('div');
-      btnContainer.className = 'category-buttons';
-      const categories = [
-        { key: 'pornstars', label: 'Порнозвёзды' },
-        { key: 'home', label: 'Домашнее' }
-      ];
-      categories.forEach(cat => {
-        const btn = document.createElement('button');
-        btn.className = 'category-btn';
-        btn.textContent = cat.label;
-        btn.addEventListener('click', () => showStarsByCategory(cat.key));
-        btnContainer.appendChild(btn);
+    // Порно-микс: случайный саб из PORNO_SUBS
+    function loadPornoMix(container) {
+      const randomSub = PORNO_SUBS[Math.floor(Math.random() * PORNO_SUBS.length)];
+      starsModalTitle.textContent = '🍿 Порно микс';
+      container.innerHTML = '';
+      loadVideoBlock({
+        subreddit: randomSub,
+        container: container,
+        loadMoreCallback: () => loadPornoMix(container)
       });
-      starsContainer.appendChild(btnContainer);
     }
 
-    function showStarsByCategory(categoryKey) {
+    // Жанры
+    function loadGenre(genre, container) {
+      starsModalTitle.textContent = genre.label;
+      container.innerHTML = '';
+      loadVideoBlock({
+        query: genre.query,
+        container: container,
+        loadMoreCallback: () => loadGenre(genre, container)
+      });
+    }
+
+    function showGenres(container) {
+      starsModalTitle.textContent = '🎭 Жанры';
+      container.innerHTML = '<button class="category-btn" id="backToMain" style="margin-bottom:1rem;">← Назад</button>';
+      const grid = document.createElement('div');
+      grid.className = 'category-buttons';
+      GENRES.forEach(genre => {
+        const btn = document.createElement('button');
+        btn.className = 'category-btn';
+        btn.textContent = genre.label;
+        btn.addEventListener('click', () => loadGenre(genre, container));
+        grid.appendChild(btn);
+      });
+      container.appendChild(grid);
+      document.getElementById('backToMain').addEventListener('click', () => showMainPornoMenu(container));
+    }
+
+    // Главное меню порно-каталога
+    function showMainPornoMenu(container) {
+      starsModalTitle.textContent = '🎬 Порно';
+      container.innerHTML = '';
+      const btnContainer = document.createElement('div');
+      btnContainer.className = 'category-buttons';
+      const items = [
+        { label: '⭐ Порнозвёзды', action: () => showStarsByCategory('pornstars', container) },
+        { label: '🏠 Домашнее', action: () => showStarsByCategory('home', container) },
+        { label: '🎲 Быстрый микс', action: () => loadPornoMix(container) },
+        { label: '🎭 Жанры', action: () => showGenres(container) }
+      ];
+      items.forEach(item => {
+        const btn = document.createElement('button');
+        btn.className = 'category-btn';
+        btn.textContent = item.label;
+        btn.addEventListener('click', item.action);
+        btnContainer.appendChild(btn);
+      });
+      container.appendChild(btnContainer);
+    }
+
+    function showStarsByCategory(categoryKey, container) {
       const stars = STARS_DATA[categoryKey];
       if (!stars) return;
       starsModalTitle.textContent = categoryKey === 'pornstars' ? 'Порнозвёзды' : 'Домашнее';
-      starsContainer.innerHTML = '<button class="category-btn" id="backToCategories" style="margin-bottom:1rem;">← Назад к категориям</button>';
+      container.innerHTML = '<button class="category-btn" id="backToMainFromStars" style="margin-bottom:1rem;">← Назад</button>';
       const grid = document.createElement('div');
       grid.className = 'stars-grid';
       stars.forEach(star => {
@@ -919,39 +994,34 @@
         imgDiv.style.backgroundImage = `url('${createStarPlaceholder(star.name, star.country)}')`;
         imgDiv.style.backgroundSize = 'cover';
         imgDiv.style.backgroundPosition = 'center';
-        // Альтернативный текст, если не загрузится (но у нас data URI, так что всегда ок)
         card.appendChild(imgDiv);
         const info = document.createElement('div');
         info.className = 'star-info';
         info.innerHTML = `<div class="star-name">${star.name}</div><div class="star-country">${star.country}</div>`;
         card.appendChild(info);
-        card.addEventListener('click', () => showStarVideos(star));
+        card.addEventListener('click', () => {
+          starsModalTitle.textContent = star.name;
+          container.innerHTML = '<button class="category-btn" id="backToStarsFromVideo" style="margin-bottom:1rem;">← Назад</button>';
+          const videoContainer = document.createElement('div');
+          container.appendChild(videoContainer);
+          document.getElementById('backToStarsFromVideo').addEventListener('click', () => showStarsByCategory(categoryKey, container));
+          loadVideoBlock({ query: star.name, container: videoContainer, loadMoreCallback: () => loadVideoBlock({ query: star.name, container: videoContainer, loadMoreCallback: () => {} }) });
+        });
         grid.appendChild(card);
       });
-      starsContainer.appendChild(grid);
-      document.getElementById('backToCategories').addEventListener('click', showCategories);
+      container.appendChild(grid);
+      document.getElementById('backToMainFromStars').addEventListener('click', () => showMainPornoMenu(container));
     }
 
-    function showStarVideos(star) {
-      starsModalTitle.textContent = star.name;
-      starsContainer.innerHTML = '<button class="category-btn" id="backToStars" style="margin-bottom:1rem;">← Назад к списку</button>';
-      const videoContainer = document.createElement('div');
-      videoContainer.id = 'starVideoContainer';
-      starsContainer.appendChild(videoContainer);
-      document.getElementById('backToStars').addEventListener('click', () => showStarsByCategory(getCurrentCategoryFromStar(star)));
-      loadStarVideos(star.name, videoContainer);
-    }
-
-    function getCurrentCategoryFromStar(star) {
-      for (let [key, arr] of Object.entries(STARS_DATA)) {
-        if (arr.includes(star)) return key;
-      }
-      return 'pornstars';
-    }
+    // Инициализация модалки
+    const starsModal = document.getElementById('starsModal');
+    const starsContainer = document.getElementById('starsContainer');
+    const starsModalTitle = document.getElementById('starsModalTitle');
+    const closeStarsModal = document.getElementById('closeStarsModal');
 
     document.getElementById('openStarsBtn').addEventListener('click', () => {
       starsModal.classList.add('open');
-      showCategories();
+      showMainPornoMenu(starsContainer);
     });
     closeStarsModal.addEventListener('click', () => starsModal.classList.remove('open'));
     starsModal.addEventListener('click', (e) => {
