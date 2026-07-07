@@ -3,248 +3,216 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>🜂 Obsidian Dream — NSFW AI Генератор</title>
+  <title>🥂 Lustre Lounge — мгновенное вдохновение</title>
   <style>
     :root {
-      --bg: #0a0a0f;
-      --surface: #12121c;
-      --accent: #b44bff;
-      --accent2: #ff4d7a;
-      --text: #e0e0f0;
-      --muted: #6b6b80;
-      --radius: 24px;
-      --shadow: 0 0 30px rgba(180, 75, 255, 0.3);
+      --bg: #1c1814;
+      --panel: #2a2420;
+      --gold: #d4af37;
+      --gold-light: #f0d060;
+      --text: #e5ddd4;
+      --muted: #a39485;
+      --radius: 20px;
+      --shadow: 0 12px 30px rgba(0,0,0,0.7);
     }
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
     html, body {
-      width: 100%;
-      height: 100%;
-      overflow: hidden;
-      background: var(--bg);
-      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      width: 100%; height: 100%; overflow: hidden;
+      background: radial-gradient(circle at 50% 30%, #2c241e, #0d0b09);
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
       color: var(--text);
       display: flex;
       align-items: center;
       justify-content: center;
     }
 
-    /* Основной контейнер — фиксирован, без скролла */
-    .app {
+    .lounge {
       width: 100%;
-      max-width: 700px;
+      max-width: 600px;
       height: 100%;
+      background: rgba(28, 24, 20, 0.8);
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(212, 175, 55, 0.15);
       display: flex;
       flex-direction: column;
-      background: var(--surface);
-      border-radius: 0;
-      box-shadow: var(--shadow), 0 8px 24px rgba(0,0,0,0.6);
-      border: 1px solid rgba(255,255,255,0.08);
-      overflow: hidden;
       position: relative;
+      box-shadow: var(--shadow);
     }
 
     @media (min-width: 600px) {
-      .app {
-        border-radius: 32px;
-        height: 95%;
-        max-height: 900px;
+      .lounge {
+        border-radius: 40px;
+        height: 90%;
+        max-height: 800px;
         margin: 0 1rem;
       }
     }
 
-    /* Шапка */
+    /* Верхняя панель */
     .header {
-      padding: 1.5rem 1.5rem 0.8rem;
-      text-align: center;
-      flex-shrink: 0;
-    }
-    .logo {
-      font-size: 2.2rem;
-      font-weight: 700;
-      letter-spacing: 2px;
-      background: linear-gradient(135deg, var(--accent), var(--accent2));
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      filter: drop-shadow(0 0 8px rgba(180,75,255,0.5));
-    }
-    .subtitle {
-      font-size: 0.85rem;
-      color: var(--muted);
-      margin-top: 0.2rem;
-    }
-
-    /* Блок ввода */
-    .input-group {
-      display: flex;
-      padding: 0 1.5rem 1rem;
-      gap: 0.5rem;
-      flex-shrink: 0;
-    }
-    .prompt-input {
-      flex: 1;
-      padding: 0.8rem 1.2rem;
-      background: rgba(255,255,255,0.06);
-      border: 1px solid rgba(255,255,255,0.12);
-      border-radius: 30px;
-      color: white;
-      font-size: 0.95rem;
-      outline: none;
-      transition: 0.3s;
-    }
-    .prompt-input:focus {
-      border-color: var(--accent);
-      box-shadow: 0 0 12px rgba(180,75,255,0.2);
-    }
-    .generate-btn {
-      padding: 0.8rem 1.5rem;
-      background: var(--accent);
-      border: none;
-      border-radius: 30px;
-      color: white;
-      font-weight: 700;
-      font-size: 0.95rem;
-      cursor: pointer;
-      transition: 0.2s;
+      padding: 1.2rem 1.5rem 0.5rem;
       display: flex;
       align-items: center;
-      gap: 0.3rem;
-      box-shadow: 0 4px 15px rgba(180,75,255,0.4);
+      justify-content: space-between;
+      border-bottom: 1px solid rgba(212, 175, 55, 0.2);
+    }
+    .logo {
+      font-size: 1.8rem;
+      font-weight: 600;
+      letter-spacing: 1px;
+      color: var(--gold);
+      text-shadow: 0 0 10px rgba(212, 175, 55, 0.3);
+    }
+    .settings-icon {
+      font-size: 1.5rem;
+      cursor: pointer;
+      color: var(--gold);
+      transition: 0.2s;
+    }
+    .settings-icon:hover { color: var(--gold-light); }
+
+    /* Категории (скрываемые) */
+    .categories-panel {
+      padding: 0.8rem 1.5rem;
+      border-bottom: 1px solid rgba(212, 175, 55, 0.1);
+      display: flex;
+      gap: 0.5rem;
+      overflow-x: auto;
       white-space: nowrap;
+      scrollbar-width: none;
+      -ms-overflow-style: none;
+      transition: max-height 0.3s ease;
+      max-height: 80px;
     }
-    .generate-btn:hover {
-      background: #c56bff;
-      box-shadow: 0 6px 20px rgba(180,75,255,0.6);
+    .categories-panel.hidden {
+      max-height: 0;
+      padding-top: 0;
+      padding-bottom: 0;
+      overflow: hidden;
+      border-bottom: none;
     }
-    .generate-btn:disabled {
-      opacity: 0.5;
-      cursor: not-allowed;
-      box-shadow: none;
+    .categories-panel::-webkit-scrollbar { display: none; }
+    .category-chip {
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.1);
+      padding: 0.4rem 1rem;
+      border-radius: 20px;
+      font-size: 0.8rem;
+      color: var(--muted);
+      cursor: pointer;
+      transition: 0.2s;
+      flex-shrink: 0;
+    }
+    .category-chip.active {
+      background: var(--gold);
+      color: #000;
+      border-color: var(--gold);
+      box-shadow: 0 0 10px rgba(212, 175, 55, 0.4);
     }
 
-    /* Зона результата */
-    .result-area {
+    /* Зона изображения */
+    .canvas {
       flex: 1;
-      margin: 0 1.5rem 1rem;
-      position: relative;
-      background: rgba(0,0,0,0.3);
-      border-radius: var(--radius);
-      overflow: hidden;
-      border: 1px dashed rgba(255,255,255,0.15);
       display: flex;
       align-items: center;
       justify-content: center;
+      position: relative;
+      background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200"><rect fill="%231c1814" width="200" height="200"/><path d="M100 20 L120 80 L180 100 L120 120 L100 180 L80 120 L20 100 L80 80 Z" fill="%232a2420" opacity="0.3"/></svg>') center/cover no-repeat;
+      margin: 0.5rem 1.5rem;
+      border-radius: var(--radius);
+      overflow: hidden;
+      border: 1px solid rgba(212, 175, 55, 0.2);
+      box-shadow: inset 0 0 30px rgba(0,0,0,0.5);
     }
-    .result-area img {
+    .canvas img, .canvas video {
       max-width: 100%;
       max-height: 100%;
       object-fit: contain;
-      display: block;
       border-radius: var(--radius);
     }
-    .placeholder {
+    .placeholder-message {
       color: var(--muted);
       text-align: center;
-      padding: 1rem;
-      font-size: 0.95rem;
+      font-size: 1rem;
+      line-height: 1.5;
     }
-    .loading-spinner {
+    .loading-indicator {
       display: flex;
       flex-direction: column;
       align-items: center;
       gap: 0.5rem;
-      color: var(--muted);
+      color: var(--gold);
     }
     .spinner {
-      width: 44px;
-      height: 44px;
-      border: 3px solid rgba(255,255,255,0.1);
-      border-top-color: var(--accent);
+      width: 40px;
+      height: 40px;
+      border: 2px solid rgba(212, 175, 55, 0.2);
+      border-top-color: var(--gold);
       border-radius: 50%;
-      animation: spin 0.8s linear infinite;
+      animation: spin 0.6s linear infinite;
     }
     @keyframes spin { to { transform: rotate(360deg); } }
 
-    /* Кнопки действий под результатом */
-    .action-buttons {
+    /* Кнопка действия */
+    .action-row {
       display: flex;
+      align-items: center;
       justify-content: center;
-      gap: 0.6rem;
-      padding: 0 1.5rem 0.5rem;
-      flex-shrink: 0;
+      padding: 0.8rem 1.5rem 1rem;
+    }
+    .inspire-btn {
+      background: linear-gradient(135deg, var(--gold), #b88a2e);
+      border: none;
+      border-radius: 30px;
+      padding: 0.9rem 2.5rem;
+      font-weight: 700;
+      font-size: 1.1rem;
+      letter-spacing: 0.5px;
+      color: #000;
+      cursor: pointer;
+      box-shadow: 0 6px 20px rgba(212, 175, 55, 0.3);
+      transition: 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .inspire-btn:hover {
+      box-shadow: 0 10px 30px rgba(212, 175, 55, 0.5);
+      transform: scale(1.02);
+    }
+    .inspire-btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      box-shadow: none;
+    }
+
+    /* Нижние кнопки */
+    .bottom-actions {
+      display: flex;
+      justify-content: space-around;
+      padding: 0.5rem 1.5rem 1.5rem;
     }
     .icon-btn {
-      background: rgba(255,255,255,0.06);
-      border: 1px solid rgba(255,255,255,0.1);
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
       color: var(--text);
-      padding: 0.5rem 1rem;
-      border-radius: 20px;
+      padding: 0.5rem 1.2rem;
+      border-radius: 25px;
+      font-size: 0.9rem;
       cursor: pointer;
-      font-size: 0.85rem;
       transition: 0.2s;
       display: flex;
       align-items: center;
       gap: 0.3rem;
     }
-    .icon-btn:hover {
-      background: rgba(255,255,255,0.12);
-    }
-
-    /* История */
-    .history {
-      padding: 0 1.5rem 1rem;
-      flex-shrink: 0;
-      overflow-y: auto;
-      max-height: 120px;
-    }
-    .history-title {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 0.3rem;
-      font-weight: 600;
-      font-size: 0.9rem;
-    }
-    .clear-btn {
-      background: none;
-      border: none;
-      color: var(--muted);
-      cursor: pointer;
-      font-size: 0.8rem;
-    }
-    .history-grid {
-      display: flex;
-      gap: 0.5rem;
-      flex-wrap: nowrap;
-      overflow-x: auto;
-      padding-bottom: 0.3rem;
-    }
-    .history-thumb {
-      width: 70px;
-      height: 70px;
-      border-radius: 10px;
-      object-fit: cover;
-      cursor: pointer;
-      border: 1px solid transparent;
-      flex-shrink: 0;
-      transition: 0.2s;
-    }
-    .history-thumb:hover {
-      border-color: var(--accent);
-      transform: scale(1.05);
-    }
+    .icon-btn:hover { background: rgba(255,255,255,0.1); }
+    .icon-btn.bookmarked { background: var(--gold); color: #000; border-color: var(--gold); }
 
     /* Полноэкранный просмотр */
     .lightbox {
       display: none;
       position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
+      top:0; left:0; width:100%; height:100%;
       background: rgba(0,0,0,0.95);
       backdrop-filter: blur(8px);
       z-index: 100;
@@ -265,193 +233,269 @@
       font-size: 2.5rem;
       color: white;
       cursor: pointer;
-      z-index: 10;
     }
   </style>
 </head>
 <body>
-  <div class="app">
-    <div class="header">
-      <div class="logo">🜂 Obsidian Dream</div>
-      <div class="subtitle">нейро-генератор NSFW</div>
-    </div>
-
-    <div class="input-group">
-      <input type="text" class="prompt-input" id="promptInput" placeholder="Опишите изображение... например: девушка с тату, неоновый свет, киберпанк" autofocus>
-      <button class="generate-btn" id="generateBtn">✨ Создать</button>
-    </div>
-
-    <div class="result-area" id="resultArea">
-      <div class="placeholder" id="placeholder">Введите запрос и нажмите «Создать»</div>
-      <div class="loading-spinner" id="loadingSpinner" style="display:none;">
-        <div class="spinner"></div>
-        <span>Генерация...</span>
-      </div>
-      <img id="resultImage" src="" alt="Результат" style="display:none;">
-    </div>
-
-    <div class="action-buttons" id="actionButtons" style="display:none;">
-      <button class="icon-btn" id="downloadBtn">⬇️ Скачать</button>
-      <button class="icon-btn" id="fullscreenBtn">🔍 Во весь экран</button>
-      <button class="icon-btn" id="saveToHistoryBtn">💾 В историю</button>
-    </div>
-
-    <div class="history" id="historySection">
-      <div class="history-title">
-        <span>🕒 Недавние генерации</span>
-        <button class="clear-btn" id="clearHistoryBtn">очистить</button>
-      </div>
-      <div class="history-grid" id="historyGrid"></div>
-    </div>
+<div class="lounge">
+  <div class="header">
+    <div class="logo">🥂 Lustre Lounge</div>
+    <div class="settings-icon" id="toggleCategoriesBtn">⚙️</div>
   </div>
 
-  <!-- Полноэкранный просмотр -->
-  <div class="lightbox" id="lightbox">
-    <span class="lightbox-close" id="closeLightbox">&times;</span>
-    <img id="lightboxImage" src="" alt="Полноэкранный просмотр">
+  <div class="categories-panel" id="categoriesPanel">
+    <span class="category-chip active" data-category="all">🔥 Всё</span>
+    <span class="category-chip" data-category="portraits">👤 Портреты</span>
+    <span class="category-chip" data-category="artistic">🎨 Арт-ню</span>
+    <span class="category-chip" data-category="erotica">🌹 Эротика</span>
+    <span class="category-chip" data-category="motion">🎬 Видео</span>
   </div>
 
-  <script>
-  (() => {
-    const promptInput = document.getElementById('promptInput');
-    const generateBtn = document.getElementById('generateBtn');
-    const resultArea = document.getElementById('resultArea');
-    const placeholder = document.getElementById('placeholder');
-    const loadingSpinner = document.getElementById('loadingSpinner');
-    const resultImage = document.getElementById('resultImage');
-    const actionButtons = document.getElementById('actionButtons');
-    const downloadBtn = document.getElementById('downloadBtn');
-    const fullscreenBtn = document.getElementById('fullscreenBtn');
-    const saveToHistoryBtn = document.getElementById('saveToHistoryBtn');
-    const historyGrid = document.getElementById('historyGrid');
-    const clearHistoryBtn = document.getElementById('clearHistoryBtn');
-    const lightbox = document.getElementById('lightbox');
-    const lightboxImage = document.getElementById('lightboxImage');
-    const closeLightbox = document.getElementById('closeLightbox');
+  <div class="canvas" id="canvas">
+    <div class="placeholder-message" id="placeholder">
+      ✨ Нажми «Вдохновить»<br>чтобы увидеть искусство
+    </div>
+    <div class="loading-indicator" id="loading" style="display:none;">
+      <div class="spinner"></div>
+      <span>Ищем красоту...</span>
+    </div>
+    <img id="mediaImage" src="" alt="Вдохновение" style="display:none;">
+    <video id="mediaVideo" controls muted autoplay loop style="display:none;"></video>
+  </div>
 
-    const HISTORY_KEY = 'obsidian_dream_history_v2';
-    let history = [];
+  <div class="action-row">
+    <button class="inspire-btn" id="inspireBtn">✨ Вдохновить</button>
+  </div>
 
-    // Загрузка истории
+  <div class="bottom-actions">
+    <button class="icon-btn" id="downloadBtn">⬇️ Скачать</button>
+    <button class="icon-btn" id="bookmarkBtn">🔖 В избранное</button>
+    <button class="icon-btn" id="fullscreenBtn">🔍 Полный экран</button>
+  </div>
+</div>
+
+<!-- Лайтбокс -->
+<div class="lightbox" id="lightbox">
+  <span class="lightbox-close" id="closeLightbox">&times;</span>
+  <img id="lightboxImage" src="" alt="Полноэкранный просмотр">
+</div>
+
+<script>
+(() => {
+  // Категории и соответствующие сабреддиты
+  const CATEGORY_SUBS = {
+    portraits: ['gentlemanboners','classysexy','PrettyGirlsNSFW','TotalBabes','BeautifulWomen'],
+    artistic: ['ArtGW','Boudoir','FineArtNudes','ElegantNudes','TheArtOfTheTease'],
+    erotica: ['GoneWild','RealGirls','PetiteGoneWild','AltGirls','gothsluts','onoff'],
+    motion: ['60fpsporn','porninfifteenseconds','nsfw_gif','adultgifs','pornvids']
+  };
+  const allSubs = Object.values(CATEGORY_SUBS).flat();
+
+  const BLOCKLIST = /(gore|blood|murder|death|kill|violen|убийств|смерт|насил|труп|femboy|trap|trans|shemale|фембой|транс)/i;
+
+  // Состояние
+  const state = {
+    currentCategory: 'all',
+    seenPosts: new Set(),
+    seenUrls: new Set(),
+    bookmarks: [],
+    currentMedia: null // { type, url, id }
+  };
+
+  try {
+    const raw = localStorage.getItem('lustre_lounge');
+    if(raw) {
+      const s = JSON.parse(raw);
+      state.bookmarks = s.bookmarks || [];
+      if(s.seenPosts) state.seenPosts = new Set(s.seenPosts);
+      if(s.seenUrls) state.seenUrls = new Set(s.seenUrls);
+    }
+  } catch(e){}
+  function saveState() {
+    localStorage.setItem('lustre_lounge', JSON.stringify({
+      bookmarks: state.bookmarks,
+      seenPosts: Array.from(state.seenPosts).slice(-2000),
+      seenUrls: Array.from(state.seenUrls).slice(-2000)
+    }));
+  }
+
+  // JSONP
+  function jsonp(url, cb, timeout=8000) {
+    return new Promise((resolve, reject) => {
+      const bases = ['https://www.reddit.com','https://old.reddit.com'];
+      let attempt = 0;
+      const tryLoad = () => {
+        if(attempt >= bases.length) return reject(new Error('JSONP fail'));
+        const base = bases[attempt];
+        const script = document.createElement('script');
+        const full = base + url + (url.includes('?')?'&':'?')+'jsonp='+cb+'&_='+Date.now();
+        const timer = setTimeout(() => { cleanup(); attempt++; tryLoad(); }, timeout);
+        function cleanup() { clearTimeout(timer); delete window[cb]; if(script.parentNode) script.parentNode.removeChild(script); }
+        window[cb] = (data) => { cleanup(); resolve(data); };
+        script.onerror = () => { cleanup(); attempt++; tryLoad(); };
+        script.src = full;
+        document.head.appendChild(script);
+      };
+      tryLoad();
+    });
+  }
+
+  async function fetchRandomPost(category = 'all') {
+    const subs = category === 'all' ? allSubs : CATEGORY_SUBS[category] || allSubs;
+    const randomSub = subs[Math.floor(Math.random() * subs.length)];
+    const data = await jsonp(`/r/${randomSub}/hot.json?limit=10`, 'loungeCB');
+    const posts = data.data.children;
+    // фильтруем просмотренное
+    const fresh = posts.filter(p => {
+      const d = p.data;
+      return d && !d.stickied && !state.seenPosts.has(d.id) && !(d.url && state.seenUrls.has(d.url)) && !BLOCKLIST.test(d.title+' '+d.subreddit);
+    });
+    if(fresh.length === 0) {
+      // если все просмотрены, сбрасываем кэш и берем первый
+      state.seenPosts.clear();
+      state.seenUrls.clear();
+      return posts[0];
+    }
+    const chosen = fresh[Math.floor(Math.random() * fresh.length)];
+    return chosen;
+  }
+
+  function extractMedia(post) {
+    const data = post.data;
+    let media = { type: 'image', url: data.url, id: data.id };
+    if(data.is_video && data.media?.reddit_video?.fallback_url) {
+      media = { type: 'video', url: data.media.reddit_video.fallback_url, poster: data.thumbnail, id: data.id };
+    } else if(data.domain === 'redgifs.com') {
+      const m = data.url.match(/\/watch\/([a-zA-Z0-9]+)/);
+      if(m) media = { type: 'iframe', url: `https://www.redgifs.com/ifr/${m[1]}`, id: data.id };
+    } else if(data.url?.match(/\.(mp4|webm|mov)$/i) || data.url?.endsWith('.gifv')) {
+      media = { type: 'video', url: data.url.replace('.gifv','.mp4'), id: data.id };
+    } else if(data.url?.match(/\.(jpg|jpeg|png|gif|webp)$/i) || data.domain === 'i.redd.it' || data.domain === 'i.imgur.com') {
+      media = { type: 'image', url: data.url, id: data.id };
+    } else {
+      return null;
+    }
+    // помечаем просмотренным
+    state.seenPosts.add(data.id);
+    if(data.url) state.seenUrls.add(data.url);
+    saveState();
+    return media;
+  }
+
+  const canvas = document.getElementById('canvas');
+  const placeholder = document.getElementById('placeholder');
+  const loadingEl = document.getElementById('loading');
+  const mediaImage = document.getElementById('mediaImage');
+  const mediaVideo = document.getElementById('mediaVideo');
+  const inspireBtn = document.getElementById('inspireBtn');
+  const downloadBtn = document.getElementById('downloadBtn');
+  const bookmarkBtn = document.getElementById('bookmarkBtn');
+  const fullscreenBtn = document.getElementById('fullscreenBtn');
+  const lightbox = document.getElementById('lightbox');
+  const lightboxImage = document.getElementById('lightboxImage');
+  const closeLightbox = document.getElementById('closeLightbox');
+  const toggleCategoriesBtn = document.getElementById('toggleCategoriesBtn');
+  const categoriesPanel = document.getElementById('categoriesPanel');
+
+  function showMedia(media) {
+    mediaImage.style.display = 'none';
+    mediaVideo.style.display = 'none';
+    placeholder.style.display = 'none';
+    if(media.type === 'image') {
+      mediaImage.src = media.url;
+      mediaImage.style.display = 'block';
+    } else if(media.type === 'video') {
+      mediaVideo.src = media.url;
+      mediaVideo.style.display = 'block';
+    }
+    state.currentMedia = media;
+    // обновить кнопку закладки
+    updateBookmarkButton();
+  }
+
+  function updateBookmarkButton() {
+    if(state.currentMedia && state.bookmarks.some(b => b.id === state.currentMedia.id)) {
+      bookmarkBtn.classList.add('bookmarked');
+    } else {
+      bookmarkBtn.classList.remove('bookmarked');
+    }
+  }
+
+  async function loadInspiration() {
+    inspireBtn.disabled = true;
+    loadingEl.style.display = 'flex';
+    placeholder.style.display = 'none';
+    mediaImage.style.display = 'none';
+    mediaVideo.style.display = 'none';
     try {
-      const saved = localStorage.getItem(HISTORY_KEY);
-      if (saved) history = JSON.parse(saved);
-    } catch (e) { history = []; }
-    renderHistory();
-
-    function saveHistory() {
-      localStorage.setItem(HISTORY_KEY, JSON.stringify(history));
-      renderHistory();
-    }
-
-    function renderHistory() {
-      historyGrid.innerHTML = '';
-      history.slice(0, 20).forEach(item => {
-        const img = document.createElement('img');
-        img.src = item.url;
-        img.title = item.prompt;
-        img.className = 'history-thumb';
-        img.onclick = () => {
-          setResultImage(item.url);
-        };
-        historyGrid.appendChild(img);
-      });
-    }
-
-    function setResultImage(url) {
-      resultImage.src = url;
-      resultImage.style.display = 'block';
-      placeholder.style.display = 'none';
-      loadingSpinner.style.display = 'none';
-      actionButtons.style.display = 'flex';
-    }
-
-    async function generateImage(prompt) {
-      const seed = Math.floor(Math.random() * 1000000);
-      const encodedPrompt = encodeURIComponent(prompt + ', highly detailed, realistic, NSFW allowed, erotic, beautiful, artistic');
-      const width = 512;
-      const height = 768;
-      const imageUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=${width}&height=${height}&nologo=true&seed=${seed}`;
-
-      placeholder.style.display = 'none';
-      resultImage.style.display = 'none';
-      loadingSpinner.style.display = 'flex';
-      actionButtons.style.display = 'none';
-
-      try {
-        const img = new Image();
-        img.src = imageUrl;
-        await new Promise((resolve, reject) => {
-          img.onload = resolve;
-          img.onerror = reject;
-          setTimeout(() => reject(new Error('Timeout')), 30000);
-        });
-
-        setResultImage(imageUrl);
-        addToHistory(imageUrl, prompt);
-      } catch (e) {
-        alert('Не удалось сгенерировать изображение. Попробуйте другой запрос или повторите позже.');
+      const post = await fetchRandomPost(state.currentCategory);
+      const media = extractMedia(post);
+      if(media) showMedia(media);
+      else {
         placeholder.style.display = 'block';
-        loadingSpinner.style.display = 'none';
+        placeholder.textContent = 'Не удалось загрузить. Попробуйте ещё раз.';
       }
+    } catch(e) {
+      placeholder.style.display = 'block';
+      placeholder.textContent = 'Ошибка сети. Проверьте соединение.';
     }
+    loadingEl.style.display = 'none';
+    inspireBtn.disabled = false;
+  }
 
-    function addToHistory(url, prompt) {
-      if (history.length > 0 && history[0].url === url) return;
-      history.unshift({ url, prompt, date: Date.now() });
-      if (history.length > 50) history.pop();
-      saveHistory();
-    }
+  inspireBtn.addEventListener('click', loadInspiration);
 
-    generateBtn.addEventListener('click', () => {
-      const prompt = promptInput.value.trim();
-      if (!prompt) {
-        alert('Введите описание изображения.');
-        return;
-      }
-      generateImage(prompt);
+  // Категории
+  document.querySelectorAll('.category-chip').forEach(chip => {
+    chip.addEventListener('click', () => {
+      document.querySelectorAll('.category-chip').forEach(c => c.classList.remove('active'));
+      chip.classList.add('active');
+      state.currentCategory = chip.dataset.category;
+      loadInspiration();
     });
+  });
 
-    promptInput.addEventListener('keypress', (e) => {
-      if (e.key === 'Enter') generateBtn.click();
-    });
+  toggleCategoriesBtn.addEventListener('click', () => {
+    categoriesPanel.classList.toggle('hidden');
+  });
 
-    downloadBtn.addEventListener('click', () => {
-      const url = resultImage.src;
-      if (!url) return;
+  // Действия
+  downloadBtn.addEventListener('click', () => {
+    if(!state.currentMedia) return;
+    if(state.currentMedia.type === 'image') {
       const a = document.createElement('a');
-      a.href = url;
-      a.download = 'obsidian-dream-' + Date.now() + '.jpg';
-      document.body.appendChild(a);
+      a.href = state.currentMedia.url;
+      a.download = 'lustre-inspiration.jpg';
       a.click();
-      document.body.removeChild(a);
-    });
+    } else if(state.currentMedia.type === 'video') {
+      window.open(state.currentMedia.url, '_blank');
+    }
+  });
 
-    fullscreenBtn.addEventListener('click', () => {
-      const url = resultImage.src;
-      if (!url) return;
-      lightboxImage.src = url;
-      lightbox.style.display = 'flex';
-    });
+  bookmarkBtn.addEventListener('click', () => {
+    if(!state.currentMedia) return;
+    const idx = state.bookmarks.findIndex(b => b.id === state.currentMedia.id);
+    if(idx > -1) {
+      state.bookmarks.splice(idx, 1);
+    } else {
+      state.bookmarks.unshift({ id: state.currentMedia.id, url: state.currentMedia.url, type: state.currentMedia.type });
+    }
+    saveState();
+    updateBookmarkButton();
+  });
 
-    closeLightbox.addEventListener('click', () => {
-      lightbox.style.display = 'none';
-    });
-    lightbox.addEventListener('click', (e) => {
-      if (e.target === lightbox) lightbox.style.display = 'none';
-    });
+  fullscreenBtn.addEventListener('click', () => {
+    if(!state.currentMedia || state.currentMedia.type === 'video') return;
+    lightboxImage.src = state.currentMedia.url;
+    lightbox.style.display = 'flex';
+  });
 
-    saveToHistoryBtn.addEventListener('click', () => {
-      addToHistory(resultImage.src, promptInput.value || 'без названия');
-    });
+  closeLightbox.addEventListener('click', () => lightbox.style.display = 'none');
+  lightbox.addEventListener('click', (e) => { if(e.target === lightbox) lightbox.style.display = 'none'; });
 
-    clearHistoryBtn.addEventListener('click', () => {
-      if (confirm('Очистить всю историю генераций?')) {
-        history = [];
-        saveHistory();
-      }
-    });
-  })();
-  </script>
+  // Первая загрузка
+  loadInspiration();
+})();
+</script>
 </body>
 </html>
