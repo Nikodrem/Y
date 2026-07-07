@@ -3,499 +3,354 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>🥂 Lustre Lounge — мгновенное вдохновение</title>
+  <title>🜂 CubEros — 3D NSFW Лабиринт</title>
   <style>
-    :root {
-      --bg: #1c1814;
-      --panel: #2a2420;
-      --gold: #d4af37;
-      --gold-light: #f0d060;
-      --text: #e5ddd4;
-      --muted: #a39485;
-      --radius: 20px;
-      --shadow: 0 12px 30px rgba(0,0,0,0.7);
-    }
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    html, body {
-      width: 100%; height: 100%; overflow: hidden;
-      background: radial-gradient(circle at 50% 30%, #2c241e, #0d0b09);
-      font-family: 'Inter', system-ui, -apple-system, sans-serif;
-      color: var(--text);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    .lounge {
-      width: 100%;
-      max-width: 600px;
-      height: 100%;
-      background: rgba(28, 24, 20, 0.8);
-      backdrop-filter: blur(20px);
-      border: 1px solid rgba(212, 175, 55, 0.15);
-      display: flex;
-      flex-direction: column;
-      position: relative;
-      box-shadow: var(--shadow);
-    }
-
-    @media (min-width: 600px) {
-      .lounge {
-        border-radius: 40px;
-        height: 90%;
-        max-height: 800px;
-        margin: 0 1rem;
-      }
-    }
-
-    /* Верхняя панель */
-    .header {
-      padding: 1.2rem 1.5rem 0.5rem;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      border-bottom: 1px solid rgba(212, 175, 55, 0.2);
-    }
-    .logo {
-      font-size: 1.8rem;
-      font-weight: 600;
-      letter-spacing: 1px;
-      color: var(--gold);
-      text-shadow: 0 0 10px rgba(212, 175, 55, 0.3);
-    }
-    .settings-icon {
-      font-size: 1.5rem;
-      cursor: pointer;
-      color: var(--gold);
-      transition: 0.2s;
-    }
-    .settings-icon:hover { color: var(--gold-light); }
-
-    /* Категории (скрываемые) */
-    .categories-panel {
-      padding: 0.8rem 1.5rem;
-      border-bottom: 1px solid rgba(212, 175, 55, 0.1);
-      display: flex;
-      gap: 0.5rem;
-      overflow-x: auto;
-      white-space: nowrap;
-      scrollbar-width: none;
-      -ms-overflow-style: none;
-      transition: max-height 0.3s ease;
-      max-height: 80px;
-    }
-    .categories-panel.hidden {
-      max-height: 0;
-      padding-top: 0;
-      padding-bottom: 0;
+    body {
+      margin: 0;
       overflow: hidden;
-      border-bottom: none;
+      background: #000;
+      font-family: 'Inter', sans-serif;
+      touch-action: none;
+      user-select: none;
+      -webkit-user-select: none;
     }
-    .categories-panel::-webkit-scrollbar { display: none; }
-    .category-chip {
-      background: rgba(255,255,255,0.05);
-      border: 1px solid rgba(255,255,255,0.1);
-      padding: 0.4rem 1rem;
-      border-radius: 20px;
-      font-size: 0.8rem;
-      color: var(--muted);
-      cursor: pointer;
-      transition: 0.2s;
-      flex-shrink: 0;
+    #info {
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      color: rgba(255,255,255,0.7);
+      font-size: 1.2rem;
+      z-index: 10;
+      letter-spacing: 2px;
+      text-shadow: 0 0 10px rgba(0,0,0,0.8);
     }
-    .category-chip.active {
-      background: var(--gold);
-      color: #000;
-      border-color: var(--gold);
-      box-shadow: 0 0 10px rgba(212, 175, 55, 0.4);
-    }
-
-    /* Зона изображения */
-    .canvas {
-      flex: 1;
+    #controls {
+      position: absolute;
+      bottom: 30px;
+      left: 50%;
+      transform: translateX(-50%);
       display: flex;
-      align-items: center;
-      justify-content: center;
-      position: relative;
-      background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200"><rect fill="%231c1814" width="200" height="200"/><path d="M100 20 L120 80 L180 100 L120 120 L100 180 L80 120 L20 100 L80 80 Z" fill="%232a2420" opacity="0.3"/></svg>') center/cover no-repeat;
-      margin: 0.5rem 1.5rem;
-      border-radius: var(--radius);
-      overflow: hidden;
-      border: 1px solid rgba(212, 175, 55, 0.2);
-      box-shadow: inset 0 0 30px rgba(0,0,0,0.5);
+      gap: 1rem;
+      z-index: 10;
     }
-    .canvas img, .canvas video {
-      max-width: 100%;
-      max-height: 100%;
-      object-fit: contain;
-      border-radius: var(--radius);
-    }
-    .placeholder-message {
-      color: var(--muted);
-      text-align: center;
-      font-size: 1rem;
-      line-height: 1.5;
-    }
-    .loading-indicator {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 0.5rem;
-      color: var(--gold);
-    }
-    .spinner {
-      width: 40px;
-      height: 40px;
-      border: 2px solid rgba(212, 175, 55, 0.2);
-      border-top-color: var(--gold);
-      border-radius: 50%;
-      animation: spin 0.6s linear infinite;
-    }
-    @keyframes spin { to { transform: rotate(360deg); } }
-
-    /* Кнопка действия */
-    .action-row {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 0.8rem 1.5rem 1rem;
-    }
-    .inspire-btn {
-      background: linear-gradient(135deg, var(--gold), #b88a2e);
-      border: none;
+    .ctrl-btn {
+      background: rgba(255,255,255,0.15);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255,255,255,0.25);
+      color: white;
+      padding: 0.8rem 1.8rem;
       border-radius: 30px;
-      padding: 0.9rem 2.5rem;
-      font-weight: 700;
-      font-size: 1.1rem;
-      letter-spacing: 0.5px;
+      font-weight: 600;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: 0.3s;
+      letter-spacing: 1px;
+    }
+    .ctrl-btn:hover {
+      background: rgba(255,255,255,0.3);
+      box-shadow: 0 0 20px rgba(255,255,255,0.2);
+    }
+    .ctrl-btn.primary {
+      background: #d4af37;
+      border-color: #d4af37;
       color: #000;
-      cursor: pointer;
-      box-shadow: 0 6px 20px rgba(212, 175, 55, 0.3);
-      transition: 0.2s;
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
+      box-shadow: 0 0 15px rgba(212,175,55,0.5);
     }
-    .inspire-btn:hover {
-      box-shadow: 0 10px 30px rgba(212, 175, 55, 0.5);
-      transform: scale(1.02);
-    }
-    .inspire-btn:disabled {
-      opacity: 0.6;
-      cursor: not-allowed;
-      box-shadow: none;
-    }
-
-    /* Нижние кнопки */
-    .bottom-actions {
-      display: flex;
-      justify-content: space-around;
-      padding: 0.5rem 1.5rem 1.5rem;
-    }
-    .icon-btn {
-      background: rgba(255,255,255,0.04);
-      border: 1px solid rgba(255,255,255,0.08);
-      color: var(--text);
-      padding: 0.5rem 1.2rem;
-      border-radius: 25px;
-      font-size: 0.9rem;
-      cursor: pointer;
-      transition: 0.2s;
-      display: flex;
-      align-items: center;
-      gap: 0.3rem;
-    }
-    .icon-btn:hover { background: rgba(255,255,255,0.1); }
-    .icon-btn.bookmarked { background: var(--gold); color: #000; border-color: var(--gold); }
-
-    /* Полноэкранный просмотр */
     .lightbox {
       display: none;
       position: fixed;
-      top:0; left:0; width:100%; height:100%;
+      top: 0; left: 0; width: 100%; height: 100%;
       background: rgba(0,0,0,0.95);
-      backdrop-filter: blur(8px);
       z-index: 100;
-      align-items: center;
       justify-content: center;
+      align-items: center;
+      flex-direction: column;
     }
-    .lightbox img {
-      max-width: 95vw;
-      max-height: 95vh;
+    .lightbox img, .lightbox video {
+      max-width: 90vw;
+      max-height: 80vh;
       object-fit: contain;
       border-radius: 12px;
       box-shadow: 0 0 40px rgba(0,0,0,0.9);
     }
     .lightbox-close {
       position: absolute;
-      top: 20px;
-      right: 30px;
+      top: 20px; right: 30px;
       font-size: 2.5rem;
       color: white;
       cursor: pointer;
+      z-index: 10;
+    }
+    .lightbox-actions {
+      display: flex;
+      gap: 1rem;
+      margin-top: 1rem;
     }
   </style>
 </head>
 <body>
-<div class="lounge">
-  <div class="header">
-    <div class="logo">🥂 Lustre Lounge</div>
-    <div class="settings-icon" id="toggleCategoriesBtn">⚙️</div>
+  <div id="info">✦ CubEros</div>
+  <div id="controls">
+    <button class="ctrl-btn" id="refreshBtn">🔄 Обновить грани</button>
+    <button class="ctrl-btn primary" id="randomBtn">🎲 Случайная грань</button>
   </div>
 
-  <div class="categories-panel" id="categoriesPanel">
-    <span class="category-chip active" data-category="all">🔥 Всё</span>
-    <span class="category-chip" data-category="portraits">👤 Портреты</span>
-    <span class="category-chip" data-category="artistic">🎨 Арт-ню</span>
-    <span class="category-chip" data-category="erotica">🌹 Эротика</span>
-    <span class="category-chip" data-category="motion">🎬 Видео</span>
-  </div>
-
-  <div class="canvas" id="canvas">
-    <div class="placeholder-message" id="placeholder">
-      ✨ Нажми «Вдохновить»<br>чтобы увидеть искусство
+  <!-- Лайтбокс для просмотра -->
+  <div class="lightbox" id="lightbox">
+    <span class="lightbox-close" id="closeLightbox">&times;</span>
+    <div id="lightboxMedia"></div>
+    <div class="lightbox-actions">
+      <button class="ctrl-btn" id="prevMediaBtn">← Назад</button>
+      <button class="ctrl-btn" id="nextMediaBtn">Вперёд →</button>
     </div>
-    <div class="loading-indicator" id="loading" style="display:none;">
-      <div class="spinner"></div>
-      <span>Ищем красоту...</span>
-    </div>
-    <img id="mediaImage" src="" alt="Вдохновение" style="display:none;">
-    <video id="mediaVideo" controls muted autoplay loop style="display:none;"></video>
   </div>
 
-  <div class="action-row">
-    <button class="inspire-btn" id="inspireBtn">✨ Вдохновить</button>
-  </div>
-
-  <div class="bottom-actions">
-    <button class="icon-btn" id="downloadBtn">⬇️ Скачать</button>
-    <button class="icon-btn" id="bookmarkBtn">🔖 В избранное</button>
-    <button class="icon-btn" id="fullscreenBtn">🔍 Полный экран</button>
-  </div>
-</div>
-
-<!-- Лайтбокс -->
-<div class="lightbox" id="lightbox">
-  <span class="lightbox-close" id="closeLightbox">&times;</span>
-  <img id="lightboxImage" src="" alt="Полноэкранный просмотр">
-</div>
-
-<script>
-(() => {
-  // Категории и соответствующие сабреддиты
-  const CATEGORY_SUBS = {
-    portraits: ['gentlemanboners','classysexy','PrettyGirlsNSFW','TotalBabes','BeautifulWomen'],
-    artistic: ['ArtGW','Boudoir','FineArtNudes','ElegantNudes','TheArtOfTheTease'],
-    erotica: ['GoneWild','RealGirls','PetiteGoneWild','AltGirls','gothsluts','onoff'],
-    motion: ['60fpsporn','porninfifteenseconds','nsfw_gif','adultgifs','pornvids']
-  };
-  const allSubs = Object.values(CATEGORY_SUBS).flat();
-
-  const BLOCKLIST = /(gore|blood|murder|death|kill|violen|убийств|смерт|насил|труп|femboy|trap|trans|shemale|фембой|транс)/i;
-
-  // Состояние
-  const state = {
-    currentCategory: 'all',
-    seenPosts: new Set(),
-    seenUrls: new Set(),
-    bookmarks: [],
-    currentMedia: null // { type, url, id }
-  };
-
-  try {
-    const raw = localStorage.getItem('lustre_lounge');
-    if(raw) {
-      const s = JSON.parse(raw);
-      state.bookmarks = s.bookmarks || [];
-      if(s.seenPosts) state.seenPosts = new Set(s.seenPosts);
-      if(s.seenUrls) state.seenUrls = new Set(s.seenUrls);
-    }
-  } catch(e){}
-  function saveState() {
-    localStorage.setItem('lustre_lounge', JSON.stringify({
-      bookmarks: state.bookmarks,
-      seenPosts: Array.from(state.seenPosts).slice(-2000),
-      seenUrls: Array.from(state.seenUrls).slice(-2000)
-    }));
-  }
-
-  // JSONP
-  function jsonp(url, cb, timeout=8000) {
-    return new Promise((resolve, reject) => {
-      const bases = ['https://www.reddit.com','https://old.reddit.com'];
-      let attempt = 0;
-      const tryLoad = () => {
-        if(attempt >= bases.length) return reject(new Error('JSONP fail'));
-        const base = bases[attempt];
-        const script = document.createElement('script');
-        const full = base + url + (url.includes('?')?'&':'?')+'jsonp='+cb+'&_='+Date.now();
-        const timer = setTimeout(() => { cleanup(); attempt++; tryLoad(); }, timeout);
-        function cleanup() { clearTimeout(timer); delete window[cb]; if(script.parentNode) script.parentNode.removeChild(script); }
-        window[cb] = (data) => { cleanup(); resolve(data); };
-        script.onerror = () => { cleanup(); attempt++; tryLoad(); };
-        script.src = full;
-        document.head.appendChild(script);
-      };
-      tryLoad();
-    });
-  }
-
-  async function fetchRandomPost(category = 'all') {
-    const subs = category === 'all' ? allSubs : CATEGORY_SUBS[category] || allSubs;
-    const randomSub = subs[Math.floor(Math.random() * subs.length)];
-    const data = await jsonp(`/r/${randomSub}/hot.json?limit=10`, 'loungeCB');
-    const posts = data.data.children;
-    // фильтруем просмотренное
-    const fresh = posts.filter(p => {
-      const d = p.data;
-      return d && !d.stickied && !state.seenPosts.has(d.id) && !(d.url && state.seenUrls.has(d.url)) && !BLOCKLIST.test(d.title+' '+d.subreddit);
-    });
-    if(fresh.length === 0) {
-      // если все просмотрены, сбрасываем кэш и берем первый
-      state.seenPosts.clear();
-      state.seenUrls.clear();
-      return posts[0];
-    }
-    const chosen = fresh[Math.floor(Math.random() * fresh.length)];
-    return chosen;
-  }
-
-  function extractMedia(post) {
-    const data = post.data;
-    let media = { type: 'image', url: data.url, id: data.id };
-    if(data.is_video && data.media?.reddit_video?.fallback_url) {
-      media = { type: 'video', url: data.media.reddit_video.fallback_url, poster: data.thumbnail, id: data.id };
-    } else if(data.domain === 'redgifs.com') {
-      const m = data.url.match(/\/watch\/([a-zA-Z0-9]+)/);
-      if(m) media = { type: 'iframe', url: `https://www.redgifs.com/ifr/${m[1]}`, id: data.id };
-    } else if(data.url?.match(/\.(mp4|webm|mov)$/i) || data.url?.endsWith('.gifv')) {
-      media = { type: 'video', url: data.url.replace('.gifv','.mp4'), id: data.id };
-    } else if(data.url?.match(/\.(jpg|jpeg|png|gif|webp)$/i) || data.domain === 'i.redd.it' || data.domain === 'i.imgur.com') {
-      media = { type: 'image', url: data.url, id: data.id };
-    } else {
-      return null;
-    }
-    // помечаем просмотренным
-    state.seenPosts.add(data.id);
-    if(data.url) state.seenUrls.add(data.url);
-    saveState();
-    return media;
-  }
-
-  const canvas = document.getElementById('canvas');
-  const placeholder = document.getElementById('placeholder');
-  const loadingEl = document.getElementById('loading');
-  const mediaImage = document.getElementById('mediaImage');
-  const mediaVideo = document.getElementById('mediaVideo');
-  const inspireBtn = document.getElementById('inspireBtn');
-  const downloadBtn = document.getElementById('downloadBtn');
-  const bookmarkBtn = document.getElementById('bookmarkBtn');
-  const fullscreenBtn = document.getElementById('fullscreenBtn');
-  const lightbox = document.getElementById('lightbox');
-  const lightboxImage = document.getElementById('lightboxImage');
-  const closeLightbox = document.getElementById('closeLightbox');
-  const toggleCategoriesBtn = document.getElementById('toggleCategoriesBtn');
-  const categoriesPanel = document.getElementById('categoriesPanel');
-
-  function showMedia(media) {
-    mediaImage.style.display = 'none';
-    mediaVideo.style.display = 'none';
-    placeholder.style.display = 'none';
-    if(media.type === 'image') {
-      mediaImage.src = media.url;
-      mediaImage.style.display = 'block';
-    } else if(media.type === 'video') {
-      mediaVideo.src = media.url;
-      mediaVideo.style.display = 'block';
-    }
-    state.currentMedia = media;
-    // обновить кнопку закладки
-    updateBookmarkButton();
-  }
-
-  function updateBookmarkButton() {
-    if(state.currentMedia && state.bookmarks.some(b => b.id === state.currentMedia.id)) {
-      bookmarkBtn.classList.add('bookmarked');
-    } else {
-      bookmarkBtn.classList.remove('bookmarked');
-    }
-  }
-
-  async function loadInspiration() {
-    inspireBtn.disabled = true;
-    loadingEl.style.display = 'flex';
-    placeholder.style.display = 'none';
-    mediaImage.style.display = 'none';
-    mediaVideo.style.display = 'none';
-    try {
-      const post = await fetchRandomPost(state.currentCategory);
-      const media = extractMedia(post);
-      if(media) showMedia(media);
-      else {
-        placeholder.style.display = 'block';
-        placeholder.textContent = 'Не удалось загрузить. Попробуйте ещё раз.';
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://unpkg.com/three@0.128.0/build/three.module.js",
+        "three/addons/": "https://unpkg.com/three@0.128.0/examples/jsm/"
       }
-    } catch(e) {
-      placeholder.style.display = 'block';
-      placeholder.textContent = 'Ошибка сети. Проверьте соединение.';
     }
-    loadingEl.style.display = 'none';
-    inspireBtn.disabled = false;
-  }
+  </script>
+  <script type="module">
+    import * as THREE from 'three';
+    import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
-  inspireBtn.addEventListener('click', loadInspiration);
+    // Сабреддиты для получения изображений
+    const SUBREDDITS = [
+      'gentlemanboners', 'classysexy', 'ArtGW', 'Boudoir', 'FineArtNudes', 'ElegantNudes',
+      'GoneWild', 'RealGirls', 'PetiteGoneWild', 'AltGirls', 'gothsluts', 'redhead', 'Blonde',
+      'Amateur', 'gwpublic', 'holdthemoan', 'onoff', 'porn', 'nsfw', 'cumsluts', 'anal'
+    ];
 
-  // Категории
-  document.querySelectorAll('.category-chip').forEach(chip => {
-    chip.addEventListener('click', () => {
-      document.querySelectorAll('.category-chip').forEach(c => c.classList.remove('active'));
-      chip.classList.add('active');
-      state.currentCategory = chip.dataset.category;
-      loadInspiration();
+    // Получение случайного изображения из сабреддита
+    async function fetchRandomImage(sub) {
+      const url = `https://www.reddit.com/r/${sub}/hot.json?limit=15`;
+      try {
+        const resp = await fetch(url);
+        const data = await resp.json();
+        const children = data.data.children;
+        // Отфильтровать посты с изображениями
+        const images = [];
+        for (let child of children) {
+          const post = child.data;
+          if (post.url && post.url.match(/\.(jpg|jpeg|png|gif|webp)$/i) || 
+              post.domain === 'i.redd.it' || post.domain === 'i.imgur.com') {
+            images.push(post.url);
+          } else if (post.is_video || post.domain === 'redgifs.com') {
+            // видео пока пропускаем для куба
+          }
+          if (images.length >= 3) break;
+        }
+        return images.length ? images[Math.floor(Math.random() * images.length)] : null;
+      } catch (e) {
+        return null;
+      }
+    }
+
+    // Основная сцена
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x0a0a0f);
+
+    const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 100);
+    camera.position.set(3, 2, 5);
+    camera.lookAt(0, 0, 0);
+
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2)); // производительность
+    document.body.appendChild(renderer.domElement);
+
+    // Управление
+    const controls = new OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true;
+    controls.dampingFactor = 0.05;
+    controls.rotateSpeed = 0.5;
+    controls.enableZoom = true;
+    controls.zoomSpeed = 0.8;
+    controls.minDistance = 3;
+    controls.maxDistance = 8;
+    controls.autoRotate = true;
+    controls.autoRotateSpeed = 0.8;
+
+    // Освещение
+    const ambientLight = new THREE.AmbientLight(0x404066);
+    scene.add(ambientLight);
+    const pointLight = new THREE.PointLight(0xffaa88, 0.8, 10);
+    pointLight.position.set(2, 3, 4);
+    scene.add(pointLight);
+    const backLight = new THREE.PointLight(0x4466aa, 0.5, 10);
+    backLight.position.set(-2, -1, -3);
+    scene.add(backLight);
+
+    // Куб с 6 гранями
+    const geometry = new THREE.BoxGeometry(2, 2, 2);
+    const materials = [
+      new THREE.MeshStandardMaterial({ color: 0x111122, roughness: 0.4, metalness: 0.1 }),
+      new THREE.MeshStandardMaterial({ color: 0x111122, roughness: 0.4, metalness: 0.1 }),
+      new THREE.MeshStandardMaterial({ color: 0x111122, roughness: 0.4, metalness: 0.1 }),
+      new THREE.MeshStandardMaterial({ color: 0x111122, roughness: 0.4, metalness: 0.1 }),
+      new THREE.MeshStandardMaterial({ color: 0x111122, roughness: 0.4, metalness: 0.1 }),
+      new THREE.MeshStandardMaterial({ color: 0x111122, roughness: 0.4, metalness: 0.1 })
+    ];
+    const cube = new THREE.Mesh(geometry, materials);
+    scene.add(cube);
+
+    // Каркас (проволочный)
+    const wireframe = new THREE.LineSegments(
+      new THREE.EdgesGeometry(geometry),
+      new THREE.LineBasicMaterial({ color: 0x88aacc, linewidth: 0.5 })
+    );
+    cube.add(wireframe);
+
+    // Сетка для эффекта
+    const gridHelper = new THREE.GridHelper(5, 20, 0x222244, 0x111122);
+    scene.add(gridHelper);
+
+    // Массив загруженных URL для граней
+    let faceImages = Array(6).fill(null);
+
+    // Загрузка текстур на грани
+    async function loadFaces() {
+      // Показываем загрузку
+      const promises = [];
+      for (let i = 0; i < 6; i++) {
+        const sub = SUBREDDITS[Math.floor(Math.random() * SUBREDDITS.length)];
+        promises.push(fetchRandomImage(sub));
+      }
+      const urls = await Promise.all(promises);
+      faceImages = urls.map((url, idx) => url || null);
+
+      // Удаляем старые текстуры
+      cube.material.forEach((mat, i) => {
+        if (mat.map) {
+          mat.map.dispose();
+          mat.map = null;
+        }
+        mat.color.set(0x111122);
+        mat.needsUpdate = true;
+      });
+
+      // Загружаем новые текстуры
+      for (let i = 0; i < 6; i++) {
+        if (faceImages[i]) {
+          new THREE.TextureLoader().load(faceImages[i], (texture) => {
+            cube.material[i].map = texture;
+            cube.material[i].color.set(0xffffff);
+            cube.material[i].needsUpdate = true;
+          }, undefined, () => {
+            // fallback при ошибке
+            cube.material[i].color.set(0x224466);
+          });
+        } else {
+          cube.material[i].color.set(0x224466);
+        }
+      }
+    }
+
+    // Клик по кубу для показа грани
+    const raycaster = new THREE.Raycaster();
+    const mouse = new THREE.Vector2();
+
+    renderer.domElement.addEventListener('click', (event) => {
+      // Вычисляем позицию мыши в нормализованных координатах
+      mouse.x = (event.clientX / renderer.domElement.clientWidth) * 2 - 1;
+      mouse.y = -(event.clientY / renderer.domElement.clientHeight) * 2 + 1;
+
+      raycaster.setFromCamera(mouse, camera);
+      const intersects = raycaster.intersectObject(cube);
+      if (intersects.length > 0) {
+        const face = intersects[0].face;
+        const materialIndex = face.materialIndex;
+        const url = faceImages[materialIndex];
+        if (url) {
+          openLightbox(url);
+        }
+      }
     });
-  });
 
-  toggleCategoriesBtn.addEventListener('click', () => {
-    categoriesPanel.classList.toggle('hidden');
-  });
+    // Функции лайтбокса
+    const lightbox = document.getElementById('lightbox');
+    const lightboxMedia = document.getElementById('lightboxMedia');
+    const closeBtn = document.getElementById('closeLightbox');
+    const prevBtn = document.getElementById('prevMediaBtn');
+    const nextBtn = document.getElementById('nextMediaBtn');
+    let currentLightboxIndex = -1;
 
-  // Действия
-  downloadBtn.addEventListener('click', () => {
-    if(!state.currentMedia) return;
-    if(state.currentMedia.type === 'image') {
-      const a = document.createElement('a');
-      a.href = state.currentMedia.url;
-      a.download = 'lustre-inspiration.jpg';
-      a.click();
-    } else if(state.currentMedia.type === 'video') {
-      window.open(state.currentMedia.url, '_blank');
+    function openLightbox(url) {
+      currentLightboxIndex = faceImages.indexOf(url);
+      showMedia(url);
+      lightbox.style.display = 'flex';
     }
-  });
 
-  bookmarkBtn.addEventListener('click', () => {
-    if(!state.currentMedia) return;
-    const idx = state.bookmarks.findIndex(b => b.id === state.currentMedia.id);
-    if(idx > -1) {
-      state.bookmarks.splice(idx, 1);
-    } else {
-      state.bookmarks.unshift({ id: state.currentMedia.id, url: state.currentMedia.url, type: state.currentMedia.type });
+    function showMedia(url) {
+      lightboxMedia.innerHTML = '';
+      const img = new Image();
+      img.src = url;
+      img.style.maxWidth = '90vw';
+      img.style.maxHeight = '80vh';
+      img.style.objectFit = 'contain';
+      img.style.borderRadius = '12px';
+      lightboxMedia.appendChild(img);
     }
-    saveState();
-    updateBookmarkButton();
-  });
 
-  fullscreenBtn.addEventListener('click', () => {
-    if(!state.currentMedia || state.currentMedia.type === 'video') return;
-    lightboxImage.src = state.currentMedia.url;
-    lightbox.style.display = 'flex';
-  });
+    function navigateLightbox(direction) {
+      if (currentLightboxIndex === -1) return;
+      let newIndex = currentLightboxIndex + direction;
+      if (newIndex < 0) newIndex = 5;
+      if (newIndex > 5) newIndex = 0;
+      // Ищем следующую грань с изображением
+      let attempts = 0;
+      while (!faceImages[newIndex] && attempts < 6) {
+        newIndex += direction;
+        if (newIndex < 0) newIndex = 5;
+        if (newIndex > 5) newIndex = 0;
+        attempts++;
+      }
+      if (faceImages[newIndex]) {
+        currentLightboxIndex = newIndex;
+        showMedia(faceImages[newIndex]);
+      }
+    }
 
-  closeLightbox.addEventListener('click', () => lightbox.style.display = 'none');
-  lightbox.addEventListener('click', (e) => { if(e.target === lightbox) lightbox.style.display = 'none'; });
+    closeBtn.addEventListener('click', () => { lightbox.style.display = 'none'; });
+    lightbox.addEventListener('click', (e) => { if (e.target === lightbox) lightbox.style.display = 'none'; });
+    prevBtn.addEventListener('click', () => navigateLightbox(-1));
+    nextBtn.addEventListener('click', () => navigateLightbox(1));
 
-  // Первая загрузка
-  loadInspiration();
-})();
-</script>
+    // Кнопки управления
+    document.getElementById('refreshBtn').addEventListener('click', loadFaces);
+    document.getElementById('randomBtn').addEventListener('click', () => {
+      // Автоматический поворот к случайной грани и открытие
+      const idx = Math.floor(Math.random() * 6);
+      // Можно анимировать камеру, но для простоты просто откроем грань
+      if (faceImages[idx]) {
+        openLightbox(faceImages[idx]);
+      } else {
+        loadFaces().then(() => {
+          if (faceImages[idx]) openLightbox(faceImages[idx]);
+        });
+      }
+    });
+
+    // Анимация
+    function animate() {
+      requestAnimationFrame(animate);
+      controls.update();
+      renderer.render(scene, camera);
+    }
+    animate();
+
+    // Обработка ресайза
+    window.addEventListener('resize', () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+
+    // Первоначальная загрузка
+    loadFaces();
+  </script>
 </body>
 </html>
