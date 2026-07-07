@@ -2,975 +2,521 @@
 <html lang="ru">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes, viewport-fit=cover">
-  <title>✨ GlassFlow — Умная лента</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=yes">
+  <title>🌴 JungleFlow — Тропическая лента</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;500;600;700&family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
   <style>
     :root {
-      --bg: #0c0c14;
-      --surface: rgba(20, 20, 35, 0.75);
-      --surface-light: rgba(30, 30, 50, 0.8);
-      --primary: #b794f4;
-      --primary-glow: rgba(183, 148, 244, 0.5);
-      --accent: #f472b6;
-      --text: #e9e9f0;
-      --text-muted: #9898b0;
-      --border: rgba(255, 255, 255, 0.08);
-      --radius: 20px;
-      --radius-sm: 12px;
-      --shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
-      --transition: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+      --jungle-dark: #0a2e1f;
+      --jungle-mid: #145a32;
+      --leaf-green: #2ecc71;
+      --lime: #a9dfbf;
+      --water: #1abc9c;
+      --sun: #f4d03f;
+      --coral: #e67e22;
+      --rain: #a3e4d7;
+      --text: #e8f8f5;
+      --text-muted: #a3c9b8;
+      --shadow-green: 0 10px 30px rgba(0,0,0,0.5), 0 0 20px rgba(46,204,113,0.3);
     }
-
-    * { margin: 0; padding: 0; box-sizing: border-box; }
+    * { margin:0; padding:0; box-sizing:border-box; }
     body {
-      background: var(--bg);
+      background: radial-gradient(circle at 20% 20%, #1a6b3c, #0a2e1f 80%);
       color: var(--text);
-      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      overscroll-behavior: none;
+      font-family: 'Quicksand', 'Nunito', sans-serif;
       min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
+      overflow-x: hidden;
+      position: relative;
+      cursor: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'><circle cx='12' cy='12' r='6' fill='none' stroke='%23f4d03f' stroke-width='2' opacity='0.7'/><circle cx='12' cy='12' r='2' fill='%23f4d03f'/></svg>") 12 12, auto;
     }
 
-    /* Фоновый эффект */
-    .bg-glow {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: radial-gradient(circle at 50% 10%, rgba(183, 148, 244, 0.15), transparent 60%),
-                  radial-gradient(circle at 80% 20%, rgba(244, 114, 182, 0.1), transparent 50%);
-      pointer-events: none;
-      z-index: 0;
+    /* Анимация дождя */
+    .rain-container {
+      position: fixed; top:0; left:0; width:100%; height:100%;
+      pointer-events: none; z-index:0; overflow: hidden;
+    }
+    .drop {
+      position: absolute; background: var(--rain); width:2px; height:15px;
+      border-radius: 50% 50% 0 0; opacity:0.3; animation: fall linear infinite;
+    }
+    @keyframes fall {
+      0% { transform: translateY(-100px) rotate(15deg); opacity:0; }
+      10% { opacity:0.6; }
+      90% { opacity:0.4; }
+      100% { transform: translateY(110vh) rotate(10deg); opacity:0; }
     }
 
-    header {
-      width: 100%;
-      max-width: 800px;
-      padding: 1rem 1.5rem;
-      background: rgba(12, 12, 20, 0.8);
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
-      border-bottom: 1px solid var(--border);
-      position: sticky;
-      top: 0;
-      z-index: 20;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      box-shadow: 0 2px 16px rgba(0,0,0,0.5);
+    /* Светлячки */
+    .firefly {
+      position: fixed; width:4px; height:4px; background: #f4d03f;
+      border-radius: 50%; filter: blur(2px); pointer-events: none;
+      animation: fly 6s ease-in-out infinite alternate;
+    }
+    @keyframes fly {
+      0% { transform: translate(0,0) scale(1); opacity:0.6; }
+      50% { transform: translate(50px, -30px) scale(2); opacity:1; }
+      100% { transform: translate(-20px, -10px) scale(1); opacity:0.5; }
     }
 
-    .logo {
-      font-size: 1.6rem;
-      font-weight: 600;
-      letter-spacing: -0.5px;
-      background: linear-gradient(135deg, var(--primary), var(--accent));
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
+    /* Лианы по краям */
+    .vines {
+      position: fixed; top:0; left:0; width:100%; height:100%; pointer-events: none; z-index:1;
+      background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 800'%3E%3Cpath d='M0,0 Q80,150 20,300 T80,600 T20,800' stroke='%23145a32' fill='none' stroke-width='12' opacity='0.4'/%3E%3Cpath d='M1200,0 Q1120,200 1180,400 T1120,700' stroke='%231e8449' fill='none' stroke-width='8' opacity='0.3'/%3E%3C/svg%3E") repeat;
     }
 
-    .nav-actions {
-      display: flex;
-      gap: 0.5rem;
-    }
-
-    .icon-btn {
-      background: rgba(255,255,255,0.05);
-      backdrop-filter: blur(10px);
-      border: 1px solid rgba(255,255,255,0.12);
-      border-radius: 50%;
-      width: 44px;
-      height: 44px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: var(--text-muted);
-      font-size: 1.3rem;
-      cursor: pointer;
-      transition: var(--transition);
-    }
-    .icon-btn:hover { background: rgba(255,255,255,0.1); color: white; }
-    .icon-btn.active { background: var(--primary); border-color: var(--primary); color: white; }
-
+    /* Главная обёртка */
     main {
-      flex: 1;
-      width: 100%;
-      max-width: 800px;
-      padding: 1rem 1rem 5rem;
+      position: relative; z-index: 2; max-width: 800px; margin:0 auto; padding: 1rem 1rem 6rem;
+      display: flex; flex-direction: column; gap: 1.5rem;
+    }
+
+    /* Шапка — как верхушка пальмы */
+    header {
+      display: flex; align-items: center; justify-content: space-between; padding: 0.5rem 0;
+    }
+    .logo {
+      font-size: 2rem; font-weight: 700; letter-spacing: -1px;
+      background: linear-gradient(135deg, #f4d03f, #2ecc71);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
+      display: flex; align-items: center; gap: 0.3rem;
+    }
+    .nav-orbit {
+      display: flex; gap: 1rem;
+    }
+    .icon-leaf {
+      width: 48px; height: 48px; border-radius: 50% 50% 50% 0;
+      background: rgba(46,204,113,0.2); backdrop-filter: blur(10px);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.4rem; color: var(--lime); border: 1px solid rgba(255,255,255,0.15);
+      transform: rotate(45deg); transition: 0.3s; cursor: pointer;
+    }
+    .icon-leaf span { transform: rotate(-45deg); }
+    .icon-leaf:hover { background: rgba(46,204,113,0.5); color: #fff; box-shadow: 0 0 15px #2ecc71; }
+
+    /* Карточка контента — капля росы */
+    .dew-card {
       position: relative;
-      z-index: 1;
-    }
-
-    /* Плавающая нижняя навигация */
-    .bottom-nav {
-      position: fixed;
-      bottom: 1rem;
-      left: 50%;
-      transform: translateX(-50%);
-      background: rgba(20, 20, 35, 0.85);
-      backdrop-filter: blur(24px);
-      -webkit-backdrop-filter: blur(24px);
-      border: 1px solid var(--border);
-      border-radius: 40px;
-      display: flex;
-      gap: 0.2rem;
-      padding: 0.5rem 1rem;
-      z-index: 30;
-      box-shadow: var(--shadow);
-    }
-
-    .nav-pill {
-      display: flex;
-      align-items: center;
-      gap: 0.3rem;
-      padding: 0.6rem 1.2rem;
-      border-radius: 30px;
-      font-weight: 500;
-      font-size: 0.9rem;
-      color: var(--text-muted);
-      background: transparent;
-      border: none;
-      cursor: pointer;
-      transition: var(--transition);
-      white-space: nowrap;
-    }
-    .nav-pill.active {
-      background: var(--primary);
-      color: white;
-      box-shadow: 0 0 16px var(--primary-glow);
-    }
-    .nav-pill:hover:not(.active) { color: white; background: rgba(255,255,255,0.05); }
-
-    .feed-container {
-      display: flex;
-      flex-direction: column;
-      gap: 1.2rem;
-    }
-
-    .card {
-      background: var(--surface);
-      backdrop-filter: blur(16px);
-      -webkit-backdrop-filter: blur(16px);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
+      background: rgba(20, 90, 60, 0.35);
+      backdrop-filter: blur(16px) saturate(150%);
+      border-radius: 80% 20% 80% 20% / 30% 80% 30% 80%;
+      box-shadow: var(--shadow-green), inset 0 0 15px rgba(255,255,255,0.1);
+      border: 1px solid rgba(255,255,255,0.15);
+      transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      animation: float 4s ease-in-out infinite;
       overflow: hidden;
-      box-shadow: var(--shadow);
-      transition: transform var(--transition), border-color var(--transition);
       cursor: pointer;
     }
-    .card:hover { transform: translateY(-2px); border-color: rgba(255,255,255,0.15); }
-
-    .media-wrapper {
-      position: relative;
-      background: #000;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      max-height: 70vh;
-      overflow: hidden;
+    @keyframes float {
+      0%,100% { transform: translateY(0px) rotate(0.5deg); }
+      50% { transform: translateY(-5px) rotate(-0.5deg); }
     }
-    .media-wrapper img,
-    .media-wrapper video {
+    .dew-card:hover {
+      border-radius: 60% 40% 60% 40% / 50% 60% 40% 50%;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.7), 0 0 30px rgba(46,204,113,0.6);
+      transform: translateY(-8px) rotate(0deg);
+      animation: none;
+    }
+    .media-drop {
       width: 100%;
-      height: auto;
-      max-height: 70vh;
-      object-fit: contain;
+      max-height: 65vh;
+      object-fit: cover;
       display: block;
+      border-radius: inherit;
     }
-    .media-wrapper iframe {
-      width: 100%;
-      aspect-ratio: 16/9;
-      height: auto;
-      border: none;
-    }
-
-    .card-body {
-      padding: 0.8rem 1rem;
-      display: flex;
-      flex-direction: column;
-      gap: 0.6rem;
+    .card-info {
+      padding: 0.8rem 1.2rem;
+      background: rgba(0,0,0,0.25);
+      backdrop-filter: blur(8px);
     }
     .card-title {
-      font-weight: 500;
-      font-size: 0.95rem;
-      color: var(--text);
-      display: -webkit-box;
-      -webkit-line-clamp: 2;
-      -webkit-box-orient: vertical;
-      overflow: hidden;
+      font-weight: 600; font-size: 0.95rem; color: #fff;
+      text-shadow: 0 1px 3px rgba(0,0,0,0.5);
+      display: -webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;
     }
-    .card-meta {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      color: var(--text-muted);
-      font-size: 0.8rem;
+    .actions-row {
+      display: flex; justify-content: flex-end; gap: 0.5rem; margin-top: 0.4rem;
     }
-    .card-actions {
-      display: flex;
-      gap: 0.5rem;
-      align-items: center;
+    .dew-btn {
+      background: rgba(255,255,255,0.1); backdrop-filter: blur(5px);
+      border: 1px solid rgba(255,255,255,0.2); color: var(--lime);
+      padding: 0.3rem 0.9rem; border-radius: 30px; font-weight: 600;
+      font-size: 0.8rem; cursor: pointer; transition: 0.2s;
     }
-    .action-btn {
-      background: rgba(255,255,255,0.06);
-      border: 1px solid rgba(255,255,255,0.1);
-      color: var(--text-muted);
-      padding: 0.4rem 1rem;
-      border-radius: 20px;
-      font-size: 0.85rem;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      gap: 0.3rem;
-      transition: var(--transition);
-    }
-    .action-btn:hover { background: rgba(255,255,255,0.12); }
-    .action-btn.liked { background: #2d5a27; border-color: #4caf50; color: white; }
-    .action-btn.disliked { background: #5a2727; border-color: #f44336; color: white; }
+    .dew-btn:hover { background: var(--leaf-green); color: #000; }
+    .dew-btn.liked { background: #2ecc71; border-color: #2ecc71; color: #000; }
+    .dew-btn.disliked { background: #c0392b; border-color: #c0392b; color: #fff; }
 
-    .download-btn {
-      position: absolute;
-      top: 10px;
-      right: 10px;
-      background: rgba(0,0,0,0.6);
-      backdrop-filter: blur(8px);
-      border: none;
-      border-radius: 30px;
-      color: white;
-      padding: 0.5rem 1rem;
-      font-size: 0.8rem;
-      cursor: pointer;
-      opacity: 0;
-      transition: opacity var(--transition);
-      z-index: 5;
+    .bookmark-icon, .download-icon {
+      position: absolute; top:10px; background: rgba(0,0,0,0.5); backdrop-filter: blur(4px);
+      border-radius: 50%; width: 32px; height: 32px; display: flex;
+      align-items: center; justify-content: center; border: none; color: white; font-size: 1rem;
+      cursor: pointer; transition: 0.3s; z-index: 5; opacity: 0;
     }
-    .media-wrapper:hover .download-btn { opacity: 1; }
+    .dew-card:hover .bookmark-icon, .dew-card:hover .download-icon { opacity: 1; }
+    .bookmark-icon { left:10px; }
+    .download-icon { right:10px; }
+    .bookmark-icon.bookmarked { background: #f1c40f; color: #000; }
 
-    .bookmark-btn {
-      position: absolute;
-      top: 10px;
-      left: 10px;
-      background: rgba(0,0,0,0.6);
-      backdrop-filter: blur(8px);
-      border: none;
-      border-radius: 30px;
-      color: white;
-      width: 36px;
-      height: 36px;
-      font-size: 1rem;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      opacity: 0;
-      transition: opacity var(--transition);
-      z-index: 5;
+    /* Плавающая нижняя панель — плот из бамбука */
+    .bamboo-raft {
+      position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+      background: rgba(20, 90, 60, 0.8); backdrop-filter: blur(16px);
+      border: 2px solid #2ecc71; border-radius: 40px; display: flex;
+      padding: 0.4rem 1.5rem; gap: 0.5rem; z-index: 20;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.6), 0 0 20px rgba(46,204,113,0.4);
     }
-    .media-wrapper:hover .bookmark-btn { opacity: 1; }
-    .bookmark-btn.bookmarked { background: var(--accent); }
+    .raft-btn {
+      background: transparent; border: none; color: var(--lime); font-weight: 600;
+      padding: 0.5rem 1.2rem; border-radius: 30px; cursor: pointer; transition: 0.3s;
+      display: flex; align-items: center; gap: 0.3rem; font-size: 0.9rem;
+    }
+    .raft-btn.active { background: #2ecc71; color: #000; box-shadow: 0 0 15px #2ecc71; }
+    .raft-btn:hover:not(.active) { background: rgba(46,204,113,0.3); }
 
-    /* Модальные окна */
+    /* Модалки — листья монстеры */
     .modal {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(0,0,0,0.8);
-      backdrop-filter: blur(20px);
-      z-index: 100;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity var(--transition);
+      position: fixed; top:0; left:0; width:100%; height:100%;
+      background: rgba(0,30,15,0.85); backdrop-filter: blur(16px);
+      z-index: 100; display: flex; align-items: center; justify-content: center;
+      opacity:0; pointer-events: none; transition: 0.3s;
     }
-    .modal.open { opacity: 1; pointer-events: auto; }
+    .modal.open { opacity:1; pointer-events: auto; }
     .modal-content {
-      background: var(--surface-light);
-      border-radius: var(--radius);
-      padding: 2rem;
-      max-width: 700px;
-      width: 90%;
-      max-height: 80vh;
-      overflow-y: auto;
-      border: 1px solid var(--border);
-      box-shadow: var(--shadow);
+      background: rgba(10, 46, 31, 0.9); border-radius: 60% 30% 60% 30% / 40% 60% 40% 60%;
+      padding: 2rem; max-width: 700px; width:90%; max-height:80vh; overflow-y:auto;
+      border:2px solid #2ecc71; box-shadow: 0 0 40px #2ecc7188;
       position: relative;
     }
     .modal-close {
-      position: absolute;
-      top: 1rem;
-      right: 1rem;
-      background: none;
-      border: none;
-      color: var(--text-muted);
-      font-size: 1.8rem;
-      cursor: pointer;
-      transition: var(--transition);
+      position: absolute; top:1rem; right:1.2rem; background:none; border:none;
+      color:#f4d03f; font-size:2rem; cursor:pointer; transition:0.3s;
     }
-    .modal-close:hover { color: white; }
+    .modal-close:hover { color:#fff; text-shadow:0 0 10px #f4d03f; }
 
-    .grid-2col {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-      gap: 1rem;
-      margin-top: 1rem;
+    .grid-stars {
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(120px,1fr)); gap:1rem;
+      margin-top:1rem;
     }
-    .bookmark-card {
-      background: rgba(0,0,0,0.3);
-      border-radius: var(--radius-sm);
-      overflow: hidden;
-      cursor: pointer;
-      transition: var(--transition);
+    .star-leaf {
+      background: rgba(0,0,0,0.3); border-radius: 30% 70% 70% 30% / 30% 30% 70% 70%;
+      padding:1rem; text-align:center; cursor:pointer; transition:0.3s;
     }
-    .bookmark-card:hover { transform: scale(1.02); }
-    .bookmark-card img { width: 100%; aspect-ratio: 16/10; object-fit: cover; }
+    .star-leaf:hover { background: #2ecc71; color:#000; }
 
-    .search-box {
-      display: flex;
-      gap: 0.5rem;
-      margin-bottom: 1rem;
-    }
-    .search-box input {
-      flex: 1;
-      padding: 0.8rem 1rem;
-      border-radius: 30px;
-      background: rgba(255,255,255,0.08);
-      border: 1px solid var(--border);
-      color: white;
-      font-size: 1rem;
-    }
-    .btn {
-      padding: 0.7rem 1.5rem;
-      border-radius: 30px;
-      background: var(--primary);
-      border: none;
-      color: white;
-      font-weight: 600;
-      cursor: pointer;
-      transition: var(--transition);
-    }
-    .btn:hover { box-shadow: 0 0 20px var(--primary-glow); }
-
-    .loading-skeleton {
-      width: 100%;
-      height: 300px;
-      background: linear-gradient(90deg, #1e1e2e 25%, #2a2a3a 50%, #1e1e2e 75%);
-      background-size: 200% 100%;
-      animation: shimmer 1.5s infinite;
-      border-radius: var(--radius);
-    }
-    @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
-
-    .to-top {
-      position: fixed;
-      bottom: 100px;
-      right: 20px;
-      width: 44px;
-      height: 44px;
-      background: var(--primary);
-      border-radius: 50%;
-      color: white;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      opacity: 0;
-      transition: opacity var(--transition);
-      z-index: 25;
-    }
-    .to-top.visible { opacity: 1; }
+    .loading-skeleton { background: rgba(255,255,255,0.05); height:200px; border-radius: 40% 20% 40% 20%; }
   </style>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
-  <div class="bg-glow"></div>
-
-  <header>
-    <div class="logo">✦ GlassFlow</div>
-    <div class="nav-actions">
-      <button class="icon-btn" id="openSearchBtn" aria-label="Поиск">🔍</button>
-      <button class="icon-btn" id="openCabinetBtn" aria-label="Закладки">🔖</button>
-      <button class="icon-btn" id="openDownloadToolBtn" aria-label="Скачать">⬇️</button>
-    </div>
-  </header>
+  <!-- Тропический фон с дождём -->
+  <div class="rain-container" id="rainContainer"></div>
+  <div class="vines"></div>
+  <!-- Светлячки генерируются в JS -->
 
   <main>
-    <!-- Панель поиска (скрыта) -->
-    <div id="searchPanel" style="display: none; margin-bottom: 1rem;">
-      <div class="search-box">
-        <input type="text" id="searchInput" placeholder="Что ищем? Девушки, жанры...">
-        <button class="btn" id="searchBtn">Найти</button>
+    <header>
+      <div class="logo">🌴 JungleFlow</div>
+      <div class="nav-orbit">
+        <div class="icon-leaf" id="openSearchBtn"><span>🔍</span></div>
+        <div class="icon-leaf" id="openBookmarksBtn"><span>🌺</span></div>
+        <div class="icon-leaf" id="openDownloadToolBtn"><span>💧</span></div>
       </div>
-    </div>
-
+    </header>
     <div class="feed-container" id="feed"></div>
-    <div id="loader" style="display:none; text-align:center; padding:2rem;">
-      <div class="loading-skeleton"></div>
-    </div>
+    <div id="loader" style="display:none; text-align:center;"><div class="loading-skeleton"></div></div>
   </main>
 
-  <!-- Нижняя навигация -->
-  <nav class="bottom-nav" id="bottomNav">
-    <button class="nav-pill active" data-tab="feed">🔥 Лента</button>
-    <button class="nav-pill" data-tab="stars">⭐ Звёзды</button>
-    <button class="nav-pill" data-tab="genres">🎭 Жанры</button>
-    <button class="nav-pill" data-tab="more">📂 Ещё</button>
+  <nav class="bamboo-raft" id="bottomRaft">
+    <button class="raft-btn active" data-tab="feed">🌿 Лента</button>
+    <button class="raft-btn" data-tab="stars">⭐ Звёзды</button>
+    <button class="raft-btn" data-tab="genres">🎭 Жанры</button>
+    <button class="raft-btn" data-tab="more">🍃 Ещё</button>
   </nav>
 
-  <!-- Модалка: Закладки -->
-  <div class="modal" id="cabinetModal">
+  <!-- Модалка поиска (инлайн) -->
+  <div id="searchPanel" style="position:fixed; top:80px; left:50%; transform:translateX(-50%); z-index:50; display:none;">
+    <input type="text" id="searchInput" placeholder="Поиск..." style="padding:1rem; border-radius:30px; border:2px solid #2ecc71; background:rgba(0,0,0,0.7); color:white; width:80vw; max-width:400px;">
+  </div>
+
+  <!-- Модалка закладок -->
+  <div class="modal" id="bookmarksModal">
     <div class="modal-content">
-      <span class="modal-close" id="closeCabinetModal">&times;</span>
-      <h3>📌 Мои закладки</h3>
-      <div class="grid-2col" id="bookmarksGrid"></div>
-      <p id="bookmarksEmpty" style="color:var(--text-muted); text-align:center; margin-top:2rem;">Здесь пока пусто</p>
+      <span class="modal-close" id="closeBookmarksModal">&times;</span>
+      <h3>🌺 Закладки</h3>
+      <div class="grid-stars" id="bookmarksGrid"></div>
     </div>
   </div>
 
-  <!-- Модалка: Каталог звёзд / жанров / доп. контент -->
+  <!-- Модалка каталога (звёзды/жанры) -->
   <div class="modal" id="catalogModal">
     <div class="modal-content" id="catalogContent"></div>
   </div>
 
-  <!-- Модалка: Инструмент скачивания -->
+  <!-- Модалка инструмента скачивания -->
   <div class="modal" id="downloadToolModal">
     <div class="modal-content">
       <span class="modal-close" id="closeDownloadToolModal">&times;</span>
-      <h3>⬇️ Скачать видео по ссылке</h3>
-      <div class="search-box" style="margin:1rem 0;">
-        <input type="text" id="downloadLinkInput" placeholder="Ссылка Reddit, RedGIFs, Imgur...">
-        <button class="btn" id="watchBtn">Смотреть</button>
-      </div>
-      <video id="downloadPlayer" controls style="width:100%; max-height:50vh; display:none; border-radius:var(--radius-sm);"></video>
-      <progress id="downloadProgress" value="0" max="100" style="width:100%; display:none; margin:0.5rem 0;"></progress>
-      <button class="btn" id="saveBtn" style="display:none;">💾 Сохранить</button>
-      <div id="dlMsg" style="margin-top:0.5rem; color:var(--text-muted);"></div>
+      <h3>💧 Скачать видео</h3>
+      <input type="text" id="downloadLinkInput" placeholder="Ссылка..." style="width:100%; padding:0.8rem; margin:1rem 0; border-radius:20px;">
+      <button id="watchBtn" style="background:#2ecc71; border:none; padding:0.7rem 1.5rem; border-radius:20px;">Смотреть</button>
+      <video id="downloadPlayer" controls style="width:100%; display:none; margin-top:1rem;"></video>
     </div>
   </div>
 
-  <button class="to-top" id="toTopBtn">↑</button>
-
   <script>
   (() => {
-    // ========== Конфигурация ==========
     const SUBREDDITS = {
-      aesthetic: ['gentlemanboners','classysexy','ArtGW','Boudoir','FineArtNudes','ElegantNudes','goddesses','TheArtOfTheTease'],
-      girls: ['GoneWild','RealGirls','Nude_Selfie','PetiteGoneWild','AltGirls','gothsluts','emogirls','tattoo','redhead','Blonde'],
-      amateur: ['Amateur','gwpublic','holdthemoan','onoff','workgonewild','funwithfriends'],
-      hardcore: ['porn','nsfw','cumsluts','anal','blowjobs','deepthroat','creampie','pussy','ass','pornvids'],
-      couples: ['gonewildcouples','couplesgonewild','amateurcouples'],
-      video: ['60fpsporn','porninfifteenseconds','nsfw_gif','adultgifs','porn_gifs']
+      aesthetic: ['gentlemanboners','ArtGW','FineArtNudes','Boudoir','ElegantNudes'],
+      girls: ['GoneWild','RealGirls','PetiteGoneWild','AltGirls','gothsluts','redhead','Blonde'],
+      amateur: ['Amateur','gwpublic','holdthemoan','onoff'],
+      hardcore: ['porn','nsfw','cumsluts','anal','blowjobs','creampie'],
+      video: ['60fpsporn','porninfifteenseconds','nsfw_gif','pornvids']
     };
-
     const ALL_SUBS = Object.values(SUBREDDITS).flat();
 
     const STARS = [
-      { name: 'Eva Elfie', tags: 'eva elfie' },
-      { name: 'Sweetie Fox', tags: 'sweetie fox' },
-      { name: 'Liya Silver', tags: 'liya silver' },
-      { name: 'Angela White', tags: 'angela white' },
-      { name: 'Riley Reid', tags: 'riley reid' },
-      { name: 'Mia Khalifa', tags: 'mia khalifa' },
-      { name: 'Sophie Rain', tags: 'sophie rain' },
-      { name: 'Lana Rhoades', tags: 'lana rhoades' },
-      { name: 'Abella Danger', tags: 'abella danger' },
-      { name: 'Valentina Nappi', tags: 'valentina nappi' },
-      { name: 'Little Caprice', tags: 'little caprice' },
-      { name: 'Brandi Love', tags: 'brandi love' },
-      { name: 'Kendra Lust', tags: 'kendra lust' },
-      { name: 'Madison Ivy', tags: 'madison ivy' },
-      { name: 'Alexis Texas', tags: 'alexis texas' },
-      { name: 'Sasha Grey', tags: 'sasha grey' },
-      { name: 'Stoya', tags: 'stoya' },
-      { name: 'Asa Akira', tags: 'asa akira' },
-      { name: 'Elsa Jean', tags: 'elsa jean' },
-      { name: 'Gabbie Carter', tags: 'gabbie carter' }
+      { name: 'Eva Elfie', query: 'eva elfie' }, { name: 'Sweetie Fox', query: 'sweetie fox' },
+      { name: 'Liya Silver', query: 'liya silver' }, { name: 'Angela White', query: 'angela white' },
+      { name: 'Riley Reid', query: 'riley reid' }, { name: 'Mia Khalifa', query: 'mia khalifa' },
+      { name: 'Sophie Rain', query: 'sophie rain' }, { name: 'Lana Rhoades', query: 'lana rhoades' },
+      { name: 'Abella Danger', query: 'abella danger' }, { name: 'Valentina Nappi', query: 'valentina nappi' }
     ];
-
     const GENRES = [
-      { emoji: '💦', name: 'Сквирт', query: 'squirt' },
-      { emoji: '🍑', name: 'Анал', query: 'anal' },
-      { emoji: '👄', name: 'Минет', query: 'blowjob' },
-      { emoji: '👇', name: 'Глубокий', query: 'deepthroat' },
-      { emoji: '💧', name: 'Кремпай', query: 'creampie' },
-      { emoji: '👩‍❤️‍💋‍👩', name: 'Лесби', query: 'lesbian' },
-      { emoji: '🌸', name: 'Соло', query: 'masturbation' },
-      { emoji: '⛓️', name: 'БДСМ', query: 'bdsm' },
-      { emoji: '👥', name: 'Групповое', query: 'gangbang' },
-      { emoji: '💥', name: 'Оргазм', query: 'orgasm' },
-      { emoji: '🎞️', name: 'Компиляции', query: 'compilation' },
-      { emoji: '💕', name: 'Нежное', query: 'passionate' }
+      { emoji:'💦', name:'Сквирт', query:'squirt' }, { emoji:'🍑', name:'Анал', query:'anal' },
+      { emoji:'👄', name:'Минет', query:'blowjob' }, { emoji:'👇', name:'Глубокий', query:'deepthroat' },
+      { emoji:'💧', name:'Кремпай', query:'creampie' }, { emoji:'🌸', name:'Соло', query:'masturbation' }
     ];
 
-    const BLOCKLIST = /(gore|blood|murder|death|kill|violen|убийств|смерт|насил|труп|femboy|trap|trans|shemale|фембой|транс)/i;
+    const BLOCKLIST = /(gore|blood|murder|death|kill|violen|убийств|смерт|насил|труп|femboy|trap|trans|shemale)/i;
 
-    // ========== Состояние ==========
-    const STORAGE_KEY = 'glassflow_state';
     let state = {
-      seenPosts: new Set(),
-      seenUrls: new Set(),
-      bookmarks: [],
-      likes: {},
-      activeTab: 'feed',
-      feedMode: 'mixed', // mixed | subreddit | search
-      searchQuery: '',
-      searchAfter: null
+      seenPosts: new Set(), seenUrls: new Set(), bookmarks: [], likes: {},
+      activeTab:'feed', searchQuery:'', searchAfter:null, feedMode:'mixed'
     };
 
-    function loadState() {
-      try {
-        const raw = localStorage.getItem(STORAGE_KEY);
-        if (raw) {
-          const saved = JSON.parse(raw);
-          state.bookmarks = saved.bookmarks || [];
-          state.likes = saved.likes || {};
-          if (saved.seenPosts) state.seenPosts = new Set(saved.seenPosts);
-          if (saved.seenUrls) state.seenUrls = new Set(saved.seenUrls);
-        }
-      } catch (e) {}
-    }
-    function saveState() {
-      const toSave = {
-        bookmarks: state.bookmarks,
-        likes: state.likes,
+    // Загрузка/сохранение
+    try {
+      const raw = localStorage.getItem('jungleflow');
+      if(raw) {
+        const s = JSON.parse(raw);
+        state.bookmarks = s.bookmarks||[]; state.likes = s.likes||{};
+        if(s.seenPosts) state.seenPosts = new Set(s.seenPosts);
+        if(s.seenUrls) state.seenUrls = new Set(s.seenUrls);
+      }
+    } catch(e){}
+    function save() {
+      localStorage.setItem('jungleflow', JSON.stringify({
+        bookmarks: state.bookmarks, likes: state.likes,
         seenPosts: Array.from(state.seenPosts).slice(-2000),
         seenUrls: Array.from(state.seenUrls).slice(-2000)
-      };
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(toSave));
+      }));
     }
-    loadState();
 
-    // ========== API (JSONP) ==========
-    function jsonp(url, callbackName, timeout = 12000) {
-      return new Promise((resolve, reject) => {
-        const bases = ['https://www.reddit.com', 'https://old.reddit.com'];
-        let attempt = 0;
-        function tryLoad() {
-          if (attempt >= bases.length) return reject(new Error('JSONP failed'));
-          const base = bases[attempt];
-          const script = document.createElement('script');
-          const fullUrl = base + url + (url.includes('?') ? '&' : '?') + 'jsonp=' + callbackName + '&_=' + Date.now();
-          const timer = setTimeout(() => {
-            cleanup();
-            attempt++;
-            tryLoad();
-          }, timeout);
-          function cleanup() {
-            clearTimeout(timer);
-            delete window[callbackName];
-            if (script.parentNode) script.parentNode.removeChild(script);
-          }
-          window[callbackName] = (data) => {
-            cleanup();
-            resolve(data);
-          };
-          script.onerror = () => {
-            cleanup();
-            attempt++;
-            tryLoad();
-          };
-          script.src = fullUrl;
-          document.head.appendChild(script);
-        }
-        tryLoad();
+    // JSONP
+    function jsonp(url, cb, timeout=12000) {
+      return new Promise((res,rej)=>{
+        const bases = ['https://www.reddit.com','https://old.reddit.com'];
+        let attempt=0;
+        const tryLoad=()=>{
+          if(attempt>=bases.length) return rej(new Error('JSONP fail'));
+          const base=bases[attempt], script=document.createElement('script');
+          const full = base+url+(url.includes('?')?'&':'?')+'jsonp='+cb+'&_='+Date.now();
+          const timer=setTimeout(()=>{cleanup();attempt++;tryLoad();},timeout);
+          function cleanup(){clearTimeout(timer);delete window[cb];if(script.parentNode)script.parentNode.removeChild(script);}
+          window[cb]=(data)=>{cleanup();res(data);};
+          script.onerror=()=>{cleanup();attempt++;tryLoad();};
+          script.src=full;document.head.appendChild(script);
+        };tryLoad();
       });
     }
 
-    // ========== Загрузка постов ==========
-    async function fetchPosts(subreddit, limit = 15, after = null) {
-      let path = `/r/${subreddit}/hot.json?limit=${limit}`;
-      if (after) path += `&after=${after}`;
-      const data = await jsonp(path, 'feedCB');
+    async function fetchPosts(sub, limit=15) {
+      const data = await jsonp(`/r/${sub}/hot.json?limit=${limit}`,'feedCB');
+      return data.data.children;
+    }
+    async function searchPosts(q, limit=20, after=null) {
+      const enc = encodeURIComponent(q+' nsfw:yes');
+      let path = `/search.json?q=${enc}&limit=${limit}&include_over_18=on&sort=new`;
+      if(after) path += `&after=${after}`;
+      const data = await jsonp(path,'searchCB');
       return data.data.children;
     }
 
-    async function searchPosts(query, limit = 20, after = null) {
-      const q = encodeURIComponent(query + ' nsfw:yes');
-      let path = `/search.json?q=${q}&limit=${limit}&include_over_18=on&sort=new`;
-      if (after) path += `&after=${after}`;
-      const data = await jsonp(path, 'searchCB');
-      return data.data.children;
-    }
-
-    // ========== Рендер карточки ==========
     function createCard(post) {
       const data = post.data;
-      if (!data || data.stickied) return null;
-      if (state.seenPosts.has(data.id) || (data.url && state.seenUrls.has(data.url))) return null;
-      if (BLOCKLIST.test(data.title + ' ' + data.subreddit)) return null;
-
-      state.seenPosts.add(data.id);
-      if (data.url) state.seenUrls.add(data.url);
+      if(!data || data.stickied) return null;
+      if(state.seenPosts.has(data.id) || (data.url && state.seenUrls.has(data.url))) return null;
+      if(BLOCKLIST.test(data.title+' '+data.subreddit)) return null;
+      state.seenPosts.add(data.id); if(data.url) state.seenUrls.add(data.url);
 
       const card = document.createElement('div');
-      card.className = 'card';
-      card.dataset.id = data.id;
+      card.className = 'dew-card';
+      const wrapper = document.createElement('div'); wrapper.style.position='relative';
 
-      const wrapper = document.createElement('div');
-      wrapper.className = 'media-wrapper';
+      let media;
+      if(data.is_video && data.media?.reddit_video?.fallback_url) {
+        media = document.createElement('video');
+        media.src = data.media.reddit_video.fallback_url; media.controls=true;
+        if(data.thumbnail && data.thumbnail!=='self') media.poster=data.thumbnail;
+      } else if(data.domain==='redgifs.com') {
+        const m = data.url.match(/\/watch\/([a-zA-Z0-9]+)/);
+        if(m) { media = document.createElement('iframe'); media.src=`https://www.redgifs.com/ifr/${m[1]}`; media.allowFullscreen=true; }
+      } else if(data.url?.match(/\.(jpg|jpeg|png|gif|webp)$/i) || data.domain==='i.redd.it' || data.domain==='i.imgur.com') {
+        media = document.createElement('img'); media.src=data.url; media.loading='lazy';
+      } else if(data.url?.match(/\.(mp4|webm|mov)$/i)) {
+        media = document.createElement('video'); media.src=data.url; media.controls=true;
+      } else return null;
+      media.className = 'media-drop';
+      wrapper.appendChild(media);
 
-      let mediaEl;
-      const isVideo = data.is_video || data.url?.match(/\.(mp4|webm|gifv|mov)$/i) || data.domain === 'redgifs.com';
-
-      if (data.is_video && data.media?.reddit_video?.fallback_url) {
-        mediaEl = document.createElement('video');
-        mediaEl.src = data.media.reddit_video.fallback_url;
-        mediaEl.controls = true;
-        mediaEl.preload = 'metadata';
-        if (data.thumbnail && data.thumbnail !== 'self') mediaEl.poster = data.thumbnail;
-      } else if (data.domain === 'redgifs.com' || data.domain === 'www.redgifs.com') {
-        const match = data.url.match(/\/watch\/([a-zA-Z0-9]+)/);
-        if (match) {
-          const iframe = document.createElement('iframe');
-          iframe.src = `https://www.redgifs.com/ifr/${match[1]}`;
-          iframe.allowFullscreen = true;
-          iframe.allow = 'autoplay; fullscreen';
-          mediaEl = iframe;
-        }
-      } else if (data.url?.match(/\.(jpg|jpeg|png|gif|webp)$/i) || data.domain === 'i.redd.it' || data.domain === 'i.imgur.com') {
-        mediaEl = document.createElement('img');
-        mediaEl.src = data.url;
-        mediaEl.loading = 'lazy';
-      } else if (data.url?.endsWith('.gifv')) {
-        mediaEl = document.createElement('video');
-        mediaEl.src = data.url.replace(/\.gifv$/, '.mp4');
-        mediaEl.controls = true;
-      } else if (data.url?.match(/\.(mp4|webm|mov)$/i)) {
-        mediaEl = document.createElement('video');
-        mediaEl.src = data.url;
-        mediaEl.controls = true;
-      } else {
-        // пропускаем неподдерживаемое
-        return null;
-      }
-
-      wrapper.appendChild(mediaEl);
-
-      // Кнопка скачать
-      const dlBtn = document.createElement('button');
-      dlBtn.className = 'download-btn';
-      dlBtn.textContent = '⬇️';
-      dlBtn.onclick = (e) => {
-        e.stopPropagation();
-        if (mediaEl.tagName === 'IMG') {
-          const a = document.createElement('a');
-          a.href = mediaEl.src;
-          a.download = '';
-          a.click();
-        } else if (mediaEl.src) {
-          window.open(mediaEl.src, '_blank');
-        } else if (mediaEl.tagName === 'IFRAME') {
-          window.open(mediaEl.src, '_blank');
-        }
+      // Закладка и скачать
+      const bm = document.createElement('button'); bm.className='bookmark-icon'; bm.innerHTML='🌺';
+      if(state.bookmarks.some(b=>b.id===data.id)) bm.classList.add('bookmarked');
+      bm.onclick=(e)=>{e.stopPropagation(); toggleBookmark(data); bm.classList.toggle('bookmarked');};
+      wrapper.appendChild(bm);
+      const dl = document.createElement('button'); dl.className='download-icon'; dl.innerHTML='💧';
+      dl.onclick=(e)=>{e.stopPropagation();
+        if(media.tagName==='IMG') window.open(media.src,'_blank');
+        else if(media.src) window.open(media.src,'_blank');
       };
-      wrapper.appendChild(dlBtn);
-
-      // Закладка
-      const bmBtn = document.createElement('button');
-      bmBtn.className = 'bookmark-btn';
-      bmBtn.textContent = '🔖';
-      if (state.bookmarks.some(b => b.id === data.id)) bmBtn.classList.add('bookmarked');
-      bmBtn.onclick = (e) => {
-        e.stopPropagation();
-        toggleBookmark(data);
-        bmBtn.classList.toggle('bookmarked');
-      };
-      wrapper.appendChild(bmBtn);
-
+      wrapper.appendChild(dl);
       card.appendChild(wrapper);
 
-      const body = document.createElement('div');
-      body.className = 'card-body';
-      body.innerHTML = `
-        <div class="card-title">${data.title || 'Без названия'}</div>
-        <div class="card-meta">
-          <span>r/${data.subreddit}</span>
-          <div class="card-actions">
-            <button class="action-btn like-btn">👍 ${state.likes[data.id]?.likes || 0}</button>
-            <button class="action-btn dislike-btn">👎 ${state.likes[data.id]?.dislikes || 0}</button>
-          </div>
-        </div>
-      `;
+      const info = document.createElement('div'); info.className='card-info';
+      info.innerHTML = `<div class="card-title">${data.title||'Без названия'}</div>
+        <div class="actions-row">
+          <button class="dew-btn like-btn">👍 ${state.likes[data.id]?.likes||0}</button>
+          <button class="dew-btn dislike-btn">👎 ${state.likes[data.id]?.dislikes||0}</button>
+        </div>`;
+      card.appendChild(info);
 
-      const likeBtn = body.querySelector('.like-btn');
-      const dislikeBtn = body.querySelector('.dislike-btn');
-      let feedbackDone = false;
-      likeBtn.onclick = (e) => {
-        e.stopPropagation();
-        if (feedbackDone) return;
-        feedbackDone = true;
-        likeBtn.classList.add('liked');
-        recordLike(data.id, true);
-        updateCounters();
-      };
-      dislikeBtn.onclick = (e) => {
-        e.stopPropagation();
-        if (feedbackDone) return;
-        feedbackDone = true;
-        dislikeBtn.classList.add('disliked');
-        recordLike(data.id, false);
-        updateCounters();
-      };
-      function updateCounters() {
-        const likes = state.likes[data.id]?.likes || 0;
-        const dislikes = state.likes[data.id]?.dislikes || 0;
-        likeBtn.textContent = `👍 ${likes}`;
-        dislikeBtn.textContent = `👎 ${dislikes}`;
+      let feedbackDone=false;
+      info.querySelector('.like-btn').onclick=(e)=>{e.stopPropagation(); if(!feedbackDone){feedbackDone=true; recordLike(data.id,true); updateCounts();}};
+      info.querySelector('.dislike-btn').onclick=(e)=>{e.stopPropagation(); if(!feedbackDone){feedbackDone=true; recordLike(data.id,false); updateCounts();}};
+      function updateCounts() {
+        const l = state.likes[data.id]?.likes||0; const d = state.likes[data.id]?.dislikes||0;
+        info.querySelector('.like-btn').textContent=`👍 ${l}`;
+        info.querySelector('.dislike-btn').textContent=`👎 ${d}`;
       }
-
-      card.appendChild(body);
       return card;
     }
 
     function toggleBookmark(data) {
-      const idx = state.bookmarks.findIndex(b => b.id === data.id);
-      if (idx > -1) state.bookmarks.splice(idx, 1);
-      else {
-        const bm = {
-          id: data.id,
-          title: data.title,
-          thumbnail: data.thumbnail,
-          url: data.url,
-          subreddit: data.subreddit,
-          isVideo: data.is_video || data.domain === 'redgifs.com',
-          media: data.is_video ? data.media?.reddit_video?.fallback_url : null
-        };
-        state.bookmarks.unshift(bm);
-      }
-      saveState();
+      const idx = state.bookmarks.findIndex(b=>b.id===data.id);
+      if(idx>-1) state.bookmarks.splice(idx,1);
+      else state.bookmarks.unshift({id:data.id,title:data.title,thumbnail:data.thumbnail,url:data.url,isVideo:data.is_video,media:data.media?.reddit_video?.fallback_url});
+      save();
+    }
+    function recordLike(id, liked) {
+      if(!state.likes[id]) state.likes[id]={likes:0,dislikes:0};
+      liked ? state.likes[id].likes++ : state.likes[id].dislikes++;
+      save();
     }
 
-    function recordLike(postId, liked) {
-      if (!state.likes[postId]) state.likes[postId] = { likes: 0, dislikes: 0 };
-      liked ? state.likes[postId].likes++ : state.likes[postId].dislikes++;
-      saveState();
-    }
-
-    // ========== Лента ==========
-    let feedLoading = false;
-    async function loadFeed(clear = false) {
-      if (feedLoading) return;
-      feedLoading = true;
-      const loader = document.getElementById('loader');
-      loader.style.display = 'block';
-      const feedEl = document.getElementById('feed');
-      if (clear) feedEl.innerHTML = '';
-
+    let loading=false;
+    async function loadFeed(clear=false) {
+      if(loading) return; loading=true;
+      const loader=document.getElementById('loader'); loader.style.display='block';
+      const feed=document.getElementById('feed'); if(clear) feed.innerHTML='';
       try {
         let posts;
-        if (state.feedMode === 'search' && state.searchQuery) {
+        if(state.feedMode==='search' && state.searchQuery) {
           posts = await searchPosts(state.searchQuery, 15, state.searchAfter);
-          state.searchAfter = posts.length ? posts[posts.length-1].data.name : null;
+          state.searchAfter = posts.length? posts[posts.length-1].data.name : null;
         } else {
-          const sub = ALL_SUBS[Math.floor(Math.random() * ALL_SUBS.length)];
+          const sub = ALL_SUBS[Math.floor(Math.random()*ALL_SUBS.length)];
           posts = await fetchPosts(sub);
         }
-        const fragment = document.createDocumentFragment();
-        posts.forEach(p => {
-          const card = createCard(p);
-          if (card) fragment.appendChild(card);
-        });
-        feedEl.appendChild(fragment);
-      } catch (e) {
-        feedEl.innerHTML += '<div style="color:red; padding:1rem;">Ошибка загрузки</div>';
-      }
-      loader.style.display = 'none';
-      feedLoading = false;
+        const frag = document.createDocumentFragment();
+        posts.forEach(p=>{ const c=createCard(p); if(c) frag.appendChild(c); });
+        feed.appendChild(frag);
+      } catch(e) { feed.innerHTML+='<p>Ошибка</p>'; }
+      loader.style.display='none'; loading=false;
     }
 
     // Бесконечный скролл
-    const sentinel = document.createElement('div');
-    sentinel.id = 'sentinel';
-    document.querySelector('main').appendChild(sentinel);
-    new IntersectionObserver((entries) => {
-      if (entries[0].isIntersecting && state.activeTab === 'feed') loadFeed();
-    }, { rootMargin: '600px' }).observe(sentinel);
+    const sentinel = document.createElement('div'); sentinel.id='sentinel'; document.querySelector('main').appendChild(sentinel);
+    new IntersectionObserver(entries=>{ if(entries[0].isIntersecting && state.activeTab==='feed') loadFeed(); },{rootMargin:'600px'}).observe(sentinel);
 
-    // ========== UI переключения ==========
-    const bottomNav = document.getElementById('bottomNav');
-    bottomNav.addEventListener('click', (e) => {
-      const pill = e.target.closest('.nav-pill');
-      if (!pill) return;
-      document.querySelectorAll('.nav-pill').forEach(p => p.classList.remove('active'));
-      pill.classList.add('active');
-      state.activeTab = pill.dataset.tab;
-      handleTabSwitch(state.activeTab);
+    // Навигация
+    document.getElementById('bottomRaft').addEventListener('click', e=>{
+      const btn = e.target.closest('.raft-btn'); if(!btn) return;
+      document.querySelectorAll('.raft-btn').forEach(b=>b.classList.remove('active'));
+      btn.classList.add('active'); state.activeTab = btn.dataset.tab;
+      if(btn.dataset.tab==='feed') { state.feedMode='mixed'; document.getElementById('feed').innerHTML=''; loadFeed(true); }
+      else if(btn.dataset.tab==='stars') openStars();
+      else if(btn.dataset.tab==='genres') openGenres();
+      else if(btn.dataset.tab==='more') openMore();
     });
 
-    function handleTabSwitch(tab) {
-      const feed = document.getElementById('feed');
-      feed.innerHTML = '';
-      switch(tab) {
-        case 'feed':
-          state.feedMode = 'mixed';
-          loadFeed(true);
-          break;
-        case 'stars':
-          openStarsCatalog();
-          break;
-        case 'genres':
-          openGenresCatalog();
-          break;
-        case 'more':
-          openMoreCatalog();
-          break;
-      }
-    }
-
-    // ========== Каталоги ==========
-    function openStarsCatalog() {
-      const modal = document.getElementById('catalogModal');
-      const content = document.getElementById('catalogContent');
-      content.innerHTML = '<h3>⭐ Популярные актрисы</h3><div class="grid-2col"></div>';
-      const grid = content.querySelector('.grid-2col');
-      STARS.forEach(star => {
-        const card = document.createElement('div');
-        card.className = 'bookmark-card';
-        card.innerHTML = `<div style="padding:1rem; text-align:center; background:rgba(0,0,0,0.3); border-radius:12px;">${star.name}</div>`;
-        card.onclick = () => startStarFeed(star);
-        grid.appendChild(card);
+    function openStars() {
+      const cont = document.getElementById('catalogContent');
+      cont.innerHTML = '<h3>⭐ Звёзды</h3><div class="grid-stars"></div>';
+      const grid = cont.querySelector('.grid-stars');
+      STARS.forEach(s=>{
+        const d=document.createElement('div'); d.className='star-leaf'; d.textContent=s.name;
+        d.onclick=()=>{ closeCatalog(); startSearch(s.query); };
+        grid.appendChild(d);
       });
-      modal.classList.add('open');
+      document.getElementById('catalogModal').classList.add('open');
     }
-
-    function openGenresCatalog() {
-      const modal = document.getElementById('catalogModal');
-      const content = document.getElementById('catalogContent');
-      content.innerHTML = '<h3>🎭 Жанры</h3><div class="grid-2col"></div>';
-      const grid = content.querySelector('.grid-2col');
-      GENRES.forEach(genre => {
-        const card = document.createElement('div');
-        card.className = 'bookmark-card';
-        card.innerHTML = `<div style="padding:1rem; text-align:center;">${genre.emoji} ${genre.name}</div>`;
-        card.onclick = () => startGenreFeed(genre);
-        grid.appendChild(card);
+    function openGenres() {
+      const cont = document.getElementById('catalogContent');
+      cont.innerHTML = '<h3>🎭 Жанры</h3><div class="grid-stars"></div>';
+      const grid = cont.querySelector('.grid-stars');
+      GENRES.forEach(g=>{
+        const d=document.createElement('div'); d.className='star-leaf'; d.textContent=g.emoji+' '+g.name;
+        d.onclick=()=>{ closeCatalog(); startSearch(g.query); };
+        grid.appendChild(d);
       });
-      modal.classList.add('open');
+      document.getElementById('catalogModal').classList.add('open');
+    }
+    function openMore() {
+      alert('Дополнительно: эстетика, любительское (реализуется аналогично)');
+    }
+    function closeCatalog() { document.getElementById('catalogModal').classList.remove('open'); }
+    function startSearch(q) {
+      state.activeTab='feed'; state.feedMode='search'; state.searchQuery=q; state.searchAfter=null;
+      document.getElementById('feed').innerHTML=''; loadFeed(true);
+      document.querySelector('.raft-btn[data-tab="feed"]').classList.add('active');
     }
 
-    function openMoreCatalog() {
-      const modal = document.getElementById('catalogModal');
-      const content = document.getElementById('catalogContent');
-      content.innerHTML = `
-        <h3>📂 Дополнительно</h3>
-        <div style="display:flex; flex-direction:column; gap:0.8rem; margin-top:1rem;">
-          <button class="btn" id="loadAestheticBtn">🎨 Эстетика</button>
-          <button class="btn" id="loadAmateurBtn">🏠 Любительское</button>
-          <button class="btn" id="loadCouplesBtn">💑 Пары</button>
-          <button class="btn" id="loadHardcoreBtn">🔥 Хардкор</button>
-        </div>
-      `;
-      modal.classList.add('open');
-      content.querySelector('#loadAestheticBtn').onclick = () => loadCategory('aesthetic');
-      content.querySelector('#loadAmateurBtn').onclick = () => loadCategory('amateur');
-      content.querySelector('#loadCouplesBtn').onclick = () => loadCategory('couples');
-      content.querySelector('#loadHardcoreBtn').onclick = () => loadCategory('hardcore');
-    }
-
-    function loadCategory(cat) {
-      closeModal('catalogModal');
-      state.activeTab = 'feed';
-      document.querySelector('.nav-pill[data-tab="feed"]').classList.add('active');
-      const sub = SUBREDDITS[cat][Math.floor(Math.random() * SUBREDDITS[cat].length)];
-      state.feedMode = 'subreddit';
-      document.getElementById('feed').innerHTML = '';
-      fetchPosts(sub, 20).then(posts => {
-        const fragment = document.createDocumentFragment();
-        posts.forEach(p => {
-          const card = createCard(p);
-          if (card) fragment.appendChild(card);
-        });
-        document.getElementById('feed').appendChild(fragment);
+    // Модалки
+    document.getElementById('openBookmarksBtn').onclick=()=>{
+      const grid=document.getElementById('bookmarksGrid'); grid.innerHTML='';
+      state.bookmarks.forEach(b=>{
+        const d=document.createElement('div'); d.className='star-leaf'; d.textContent=b.title?.slice(0,20);
+        d.onclick=()=>alert('Просмотр закладки'); grid.appendChild(d);
       });
-    }
-
-    function startStarFeed(star) {
-      closeModal('catalogModal');
-      state.activeTab = 'feed';
-      document.querySelector('.nav-pill[data-tab="feed"]').classList.add('active');
-      state.feedMode = 'search';
-      state.searchQuery = star.tags;
-      state.searchAfter = null;
-      document.getElementById('feed').innerHTML = '';
-      loadFeed(true);
-    }
-
-    function startGenreFeed(genre) {
-      closeModal('catalogModal');
-      state.activeTab = 'feed';
-      document.querySelector('.nav-pill[data-tab="feed"]').classList.add('active');
-      state.feedMode = 'search';
-      state.searchQuery = genre.query;
-      state.searchAfter = null;
-      document.getElementById('feed').innerHTML = '';
-      loadFeed(true);
-    }
-
-    function closeModal(id) {
-      document.getElementById(id).classList.remove('open');
-    }
-
-    // ========== Модалки ==========
-    document.getElementById('openCabinetBtn').onclick = () => {
-      const grid = document.getElementById('bookmarksGrid');
-      grid.innerHTML = '';
-      if (state.bookmarks.length === 0) {
-        document.getElementById('bookmarksEmpty').style.display = 'block';
-      } else {
-        document.getElementById('bookmarksEmpty').style.display = 'none';
-        state.bookmarks.forEach(bm => {
-          const card = document.createElement('div');
-          card.className = 'bookmark-card';
-          card.innerHTML = `<img src="${bm.thumbnail || ''}" onerror="this.style.display='none'"><div style="padding:0.5rem; font-size:0.8rem;">${bm.title?.slice(0,40) || ''}</div>`;
-          card.onclick = () => {
-            // Воспроизвести
-            alert('Просмотр закладки (в реальном приложении открыли бы плеер)');
-          };
-          grid.appendChild(card);
-        });
-      }
-      document.getElementById('cabinetModal').classList.add('open');
+      document.getElementById('bookmarksModal').classList.add('open');
     };
-    document.getElementById('closeCabinetModal').onclick = () => closeModal('cabinetModal');
-
-    document.getElementById('openSearchBtn').onclick = () => {
-      const panel = document.getElementById('searchPanel');
-      panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+    document.getElementById('closeBookmarksModal').onclick=()=>document.getElementById('bookmarksModal').classList.remove('open');
+    document.getElementById('openSearchBtn').onclick=()=>{
+      const p=document.getElementById('searchPanel'); p.style.display = p.style.display==='none'?'block':'none';
+      if(p.style.display==='block') document.getElementById('searchInput').focus();
     };
-    document.getElementById('searchBtn').onclick = () => {
-      const q = document.getElementById('searchInput').value.trim();
-      if (!q) return;
-      state.feedMode = 'search';
-      state.searchQuery = q;
-      state.searchAfter = null;
-      document.getElementById('feed').innerHTML = '';
-      loadFeed(true);
-    };
-
-    // Инструмент загрузки
-    document.getElementById('openDownloadToolBtn').onclick = () => {
-      document.getElementById('downloadToolModal').classList.add('open');
-    };
-    document.getElementById('closeDownloadToolModal').onclick = () => closeModal('downloadToolModal');
-    document.getElementById('watchBtn').onclick = async () => {
-      const url = document.getElementById('downloadLinkInput').value.trim();
-      // упрощённая реализация
-      document.getElementById('dlMsg').textContent = 'Функция в разработке. Используйте кнопку "Скачать" на карточках.';
-    };
-
-    // Кнопка наверх
-    window.addEventListener('scroll', () => {
-      document.getElementById('toTopBtn').classList.toggle('visible', scrollY > 700);
+    document.getElementById('searchInput').addEventListener('keypress',e=>{
+      if(e.key==='Enter'){ startSearch(e.target.value); document.getElementById('searchPanel').style.display='none'; }
     });
-    document.getElementById('toTopBtn').onclick = () => window.scrollTo({top:0, behavior:'smooth'});
 
-    // Старт
+    // Дождь и светлячки
+    function createRain() {
+      const cont = document.getElementById('rainContainer');
+      for(let i=0; i<40; i++) {
+        const drop = document.createElement('div'); drop.className='drop';
+        drop.style.left = Math.random()*100+'%'; drop.style.animationDuration = 0.8+Math.random()*1.2+'s';
+        drop.style.animationDelay = Math.random()*2+'s';
+        cont.appendChild(drop);
+      }
+      for(let i=0; i<15; i++) {
+        const fly = document.createElement('div'); fly.className='firefly';
+        fly.style.left = Math.random()*100+'%'; fly.style.top = Math.random()*100+'%';
+        document.body.appendChild(fly);
+      }
+    }
+    createRain();
+
     loadFeed(true);
   })();
   </script>
