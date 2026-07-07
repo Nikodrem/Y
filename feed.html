@@ -3,291 +3,296 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-  <title>🌊 Elysian — бесконечная галерея</title>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <title>🎰 Fortune Lust — Колесо Судьбы</title>
   <style>
     :root {
-      --bg: #f5f2f0;
-      --surface: rgba(255,255,255,0.7);
-      --text: #1a1a1a;
-      --muted: #7a7a7a;
-      --accent: #d68c6a;
-      --accent2: #8c6a5a;
-      --shadow: 0 8px 24px rgba(0,0,0,0.08);
-      --radius: 20px;
-      --transition: 0.25s ease;
+      --bg: #1a0b1c;
+      --gold: #d4af37;
+      --gold2: #b8922e;
+      --accent: #c2185b;
+      --text: #f5e9d8;
+      --surface: rgba(30, 15, 30, 0.9);
+      --radius: 24px;
+      --shadow: 0 0 30px rgba(212, 175, 55, 0.5);
     }
     * { margin:0; padding:0; box-sizing:border-box; }
     body {
-      background: var(--bg);
-      font-family: 'Plus Jakarta Sans', sans-serif;
+      background: radial-gradient(circle at 30% 20%, #2a1a3a, #0c0612);
       color: var(--text);
+      font-family: 'Playfair Display', 'Georgia', serif;
       min-height: 100vh;
       display: flex;
-      flex-direction: column;
       align-items: center;
+      justify-content: center;
+      overflow-x: hidden;
+      user-select: none;
+      -webkit-user-select: none;
     }
-    .app-wrapper {
+    .container {
       width: 100%;
-      max-width: 1200px;
-      padding: 1rem 1rem 4rem;
+      max-width: 700px;
+      padding: 1rem;
       display: flex;
       flex-direction: column;
-      gap: 1.5rem;
-    }
-
-    /* Заголовок */
-    header {
-      display: flex;
-      justify-content: space-between;
       align-items: center;
-      flex-wrap: wrap;
-      gap: 1rem;
+      gap: 2rem;
     }
-    .logo {
-      font-size: 2rem;
+    .title {
+      font-size: 2.8rem;
       font-weight: 700;
-      letter-spacing: -0.5px;
-      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      text-align: center;
+      letter-spacing: 3px;
+      background: linear-gradient(180deg, #f9d976, #e2b63d, #b27f1c);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
+      filter: drop-shadow(0 2px 4px rgba(0,0,0,0.7));
+      text-shadow: 0 0 10px rgba(212,175,55,0.8);
     }
-    .controls {
-      display: flex;
-      gap: 0.5rem;
-      align-items: center;
-      flex-wrap: wrap;
-    }
-    .pill-btn {
-      background: rgba(255,255,255,0.6);
-      backdrop-filter: blur(12px);
-      border: 1px solid rgba(0,0,0,0.05);
-      padding: 0.5rem 1.2rem;
-      border-radius: 30px;
-      font-weight: 500;
-      font-size: 0.9rem;
-      cursor: pointer;
-      transition: var(--transition);
-      color: var(--text);
-    }
-    .pill-btn.active, .pill-btn:hover {
-      background: var(--accent);
-      color: white;
-      border-color: var(--accent);
-    }
-    .search-input {
-      padding: 0.5rem 1rem;
-      border-radius: 20px;
-      border: 1px solid rgba(0,0,0,0.08);
-      background: rgba(255,255,255,0.6);
-      backdrop-filter: blur(8px);
-      font-size: 0.9rem;
-      outline: none;
-      min-width: 150px;
-    }
-    .search-input:focus {
-      border-color: var(--accent);
-    }
-
-    /* Masonry сетка */
-    .masonry {
-      columns: 4 240px;
-      column-gap: 1rem;
-    }
-    @media (max-width: 800px) {
-      .masonry { columns: 2 180px; }
-    }
-
-    .gallery-item {
-      break-inside: avoid;
-      margin-bottom: 1rem;
-      border-radius: var(--radius);
-      overflow: hidden;
-      background: var(--surface);
-      backdrop-filter: blur(12px);
-      box-shadow: var(--shadow);
-      transition: transform var(--transition), box-shadow var(--transition);
-      cursor: pointer;
-      position: relative;
-    }
-    .gallery-item:hover {
-      transform: translateY(-6px);
-      box-shadow: 0 16px 32px rgba(0,0,0,0.12);
-    }
-    .gallery-item img, .gallery-item video {
-      width: 100%;
-      display: block;
-      object-fit: cover;
-    }
-    .item-info {
-      padding: 0.6rem 0.8rem;
-      font-size: 0.8rem;
-      color: var(--muted);
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-    .like-btn-mini {
-      background: none;
-      border: none;
-      color: var(--muted);
-      cursor: pointer;
+    .subtitle {
       font-size: 1rem;
-      transition: 0.2s;
-    }
-    .like-btn-mini.liked { color: #e05a5a; }
-
-    .loader-sentinel {
-      height: 1px;
+      color: #cbb06b;
+      text-align: center;
+      margin-top: -1rem;
+      letter-spacing: 2px;
     }
 
-    /* Полноэкранный просмотр */
-    .lightbox {
-      position: fixed;
-      top: 0;
-      left: 0;
+    /* Колесо фортуны */
+    .wheel-container {
+      position: relative;
+      width: 300px;
+      height: 300px;
+      margin: 0 auto;
+    }
+    .wheel {
       width: 100%;
       height: 100%;
-      background: rgba(0,0,0,0.9);
-      backdrop-filter: blur(16px);
-      z-index: 100;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity 0.3s;
-    }
-    .lightbox.open { opacity:1; pointer-events: auto; }
-    .lightbox-content {
-      max-width: 90vw;
-      max-height: 90vh;
+      border-radius: 50%;
+      background: conic-gradient(
+        #c2185b 0deg 60deg,
+        #d4af37 60deg 120deg,
+        #6a1b9a 120deg 180deg,
+        #b8922e 180deg 240deg,
+        #8e24aa 240deg 300deg,
+        #c2185b 300deg 360deg
+      );
+      box-shadow: 0 0 0 4px var(--gold), 0 0 30px rgba(212,175,55,0.8), inset 0 0 20px rgba(0,0,0,0.5);
       position: relative;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+      transition: transform 3.5s cubic-bezier(0.17, 0.67, 0.12, 0.99);
     }
-    .lightbox-content img, .lightbox-content video {
-      max-width: 90vw;
-      max-height: 90vh;
-      border-radius: 16px;
-      box-shadow: 0 0 30px rgba(0,0,0,0.8);
+    .wheel.spinning {
+      transform: rotate(0deg);
     }
-    .close-lightbox {
+    .wheel-pointer {
       position: absolute;
-      top: 20px;
-      right: 30px;
-      font-size: 2.5rem;
-      color: white;
-      cursor: pointer;
-      z-index: 10;
-      background: none;
-      border: none;
+      top: -15px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 0;
+      height: 0;
+      border-left: 20px solid transparent;
+      border-right: 20px solid transparent;
+      border-top: 30px solid #f9d976;
+      filter: drop-shadow(0 0 6px rgba(212,175,55,0.9));
+      z-index: 5;
     }
-    .lightbox-nav {
+    .wheel-center {
       position: absolute;
       top: 50%;
-      transform: translateY(-50%);
-      font-size: 3rem;
-      color: white;
-      cursor: pointer;
-      background: rgba(0,0,0,0.5);
+      left: 50%;
+      transform: translate(-50%,-50%);
+      width: 60px;
+      height: 60px;
+      background: radial-gradient(circle, #f9d976, #b27f1c);
       border-radius: 50%;
-      width: 50px;
-      height: 50px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      user-select: none;
+      box-shadow: 0 0 15px gold, inset 0 0 10px rgba(0,0,0,0.6);
+      border: 3px solid #fff;
+      z-index: 2;
     }
-    .lightbox-nav.prev { left: 10px; }
-    .lightbox-nav.next { right: 10px; }
+    .spin-btn {
+      margin-top: 1rem;
+      background: linear-gradient(to bottom, #f9d976, #b27f1c);
+      border: none;
+      padding: 1rem 3rem;
+      border-radius: 50px;
+      font-size: 1.4rem;
+      font-weight: bold;
+      color: #2a1a3a;
+      letter-spacing: 1px;
+      cursor: pointer;
+      box-shadow: 0 0 20px rgba(212,175,55,0.7), 0 4px 12px rgba(0,0,0,0.6);
+      transition: 0.2s;
+      text-transform: uppercase;
+    }
+    .spin-btn:hover {
+      background: linear-gradient(to bottom, #ffea8c, #d4af37);
+      box-shadow: 0 0 30px rgba(255,215,0,1);
+      transform: scale(1.05);
+    }
+    .spin-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
 
-    .to-top {
-      position: fixed;
-      bottom: 30px;
-      right: 30px;
-      width: 44px;
-      height: 44px;
-      background: var(--accent);
+    /* Сектора колеса (метки) */
+    .sector-labels {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      top: 0;
+      left: 0;
+      pointer-events: none;
+      font-weight: bold;
+      font-size: 0.8rem;
       color: white;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      opacity: 0;
-      transition: opacity 0.3s;
-      cursor: pointer;
-      z-index: 20;
+      text-shadow: 0 1px 2px black;
     }
-    .to-top.visible { opacity: 1; }
+    .sector-label {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      transform-origin: 0 0;
+    }
+
+    /* Контент после остановки */
+    .result-card {
+      background: var(--surface);
+      backdrop-filter: blur(12px);
+      border: 2px solid var(--gold);
+      border-radius: var(--radius);
+      padding: 1.5rem;
+      width: 100%;
+      max-width: 500px;
+      box-shadow: 0 0 30px rgba(212,175,55,0.5);
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      gap: 1rem;
+      animation: fadeIn 0.6s ease;
+    }
+    @keyframes fadeIn {
+      from { opacity:0; transform: translateY(20px); }
+      to { opacity:1; transform: translateY(0); }
+    }
+    .result-media {
+      width: 100%;
+      border-radius: 12px;
+      overflow: hidden;
+      background: #000;
+    }
+    .result-media img, .result-media video {
+      width: 100%;
+      max-height: 60vh;
+      object-fit: contain;
+      display: block;
+    }
+    .result-title {
+      font-size: 1rem;
+      font-weight: 500;
+      color: var(--gold);
+      text-align: center;
+    }
+    .action-row {
+      display: flex;
+      gap: 0.8rem;
+    }
+    .action-btn {
+      background: rgba(255,255,255,0.1);
+      border: 1px solid var(--gold);
+      color: var(--text);
+      padding: 0.5rem 1.2rem;
+      border-radius: 20px;
+      cursor: pointer;
+      transition: 0.3s;
+      font-size: 0.9rem;
+    }
+    .action-btn:hover {
+      background: var(--gold);
+      color: #000;
+    }
+    .loading-spinner {
+      display: none;
+      text-align: center;
+      color: var(--gold);
+      margin: 1rem;
+    }
   </style>
 </head>
 <body>
-<div class="app-wrapper">
-  <header>
-    <div class="logo">🌊 Elysian</div>
-    <div class="controls">
-      <input type="text" class="search-input" id="searchInput" placeholder="Поиск...">
-      <button class="pill-btn active" data-cat="all">Всё</button>
-      <button class="pill-btn" data-cat="portraits">Портреты</button>
-      <button class="pill-btn" data-cat="art">Арт</button>
-      <button class="pill-btn" data-cat="erotica">Эротика</button>
-      <button class="pill-btn" data-cat="video">Видео</button>
+<div class="container">
+  <h1 class="title">🎰 Fortune Lust</h1>
+  <p class="subtitle">Испытай судьбу — крути колесо!</p>
+
+  <div class="wheel-container">
+    <div class="wheel-pointer"></div>
+    <div class="wheel" id="wheel"></div>
+    <div class="wheel-center"></div>
+  </div>
+
+  <button class="spin-btn" id="spinBtn">Крутить 🎲</button>
+
+  <div class="loading-spinner" id="loading">✨ Загрузка дара судьбы...</div>
+
+  <div class="result-card" id="resultCard">
+    <div class="result-media" id="resultMedia"></div>
+    <div class="result-title" id="resultTitle"></div>
+    <div class="action-row">
+      <button class="action-btn" id="downloadResultBtn">⬇️ Сохранить</button>
+      <button class="action-btn" id="spinAgainBtn">🔄 Ещё раз</button>
     </div>
-  </header>
-
-  <div class="masonry" id="masonryGrid"></div>
-  <div class="loader-sentinel" id="sentinel"></div>
+  </div>
 </div>
-
-<!-- Лайтбокс -->
-<div class="lightbox" id="lightbox">
-  <button class="close-lightbox" id="closeLightbox">&times;</button>
-  <div class="lightbox-content" id="lightboxContent"></div>
-  <div class="lightbox-nav prev" id="prevBtn">‹</div>
-  <div class="lightbox-nav next" id="nextBtn">›</div>
-</div>
-<div class="to-top" id="toTopBtn">↑</div>
 
 <script>
 (() => {
-  // Сабреддиты для разных категорий
-  const CATEGORIES = {
-    portraits: ['gentlemanboners','classysexy','PrettyGirlsNSFW','TotalBabes','BeautifulWomen','Nude_Selfie'],
-    art: ['ArtGW','Boudoir','FineArtNudes','ElegantNudes','TheArtOfTheTease','EroticArt','ArtisticNudes'],
-    erotica: ['GoneWild','RealGirls','PetiteGoneWild','AltGirls','gothsluts','onoff','lingerie','holdthemoan'],
-    video: ['60fpsporn','porninfifteenseconds','nsfw_gif','adultgifs','pornvids','cumsluts']
-  };
-  const ALL_SUBS = Object.values(CATEGORIES).flat();
+  // ================== Конфигурация ==================
+  const CATEGORIES = [
+    { name: 'Портреты', subs: ['gentlemanboners','classysexy','PrettyGirlsNSFW','TotalBabes'], color: '#c2185b' },
+    { name: 'Арт', subs: ['ArtGW','Boudoir','FineArtNudes','ElegantNudes'], color: '#d4af37' },
+    { name: 'Эротика', subs: ['GoneWild','RealGirls','PetiteGoneWild','onoff'], color: '#6a1b9a' },
+    { name: 'Видео', subs: ['60fpsporn','porninfifteenseconds','nsfw_gif','cumsluts'], color: '#b8922e' },
+    { name: 'Сюрприз', subs: ['milf','AsiansGoneWild','holdthemoan','lingerie'], color: '#8e24aa' },
+    { name: 'Бонус', subs: ['AltGirls','gothsluts','redhead','Blonde'], color: '#c2185b' }
+  ];
+  const SECTOR_COUNT = CATEGORIES.length;
+  const SEGMENT_DEG = 360 / SECTOR_COUNT;
 
   const BLOCKLIST = /(gore|blood|murder|death|kill|violen|убийств|смерт|насил|труп|femboy|trap|trans|shemale|фембой|транс)/i;
-
-  let state = {
-    seenPosts: new Set(),
-    seenUrls: new Set(),
-    galleryItems: [],
-    currentCat: 'all',
-    lightboxIndex: 0,
-  };
-
+  const STORAGE_KEY = 'fortune_lust_seen';
+  let seenPosts = new Set();
+  let seenUrls = new Set();
   try {
-    const raw = localStorage.getItem('elysian_state');
+    const raw = localStorage.getItem(STORAGE_KEY);
     if(raw) {
       const s = JSON.parse(raw);
-      if(s.seenPosts) state.seenPosts = new Set(s.seenPosts);
-      if(s.seenUrls) state.seenUrls = new Set(s.seenUrls);
+      if(s.posts) seenPosts = new Set(s.posts);
+      if(s.urls) seenUrls = new Set(s.urls);
     }
   } catch(e){}
 
-  function saveState() {
-    localStorage.setItem('elysian_state', JSON.stringify({
-      seenPosts: Array.from(state.seenPosts).slice(-2000),
-      seenUrls: Array.from(state.seenUrls).slice(-2000),
+  function saveSeen() {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({
+      posts: Array.from(seenPosts).slice(-1000),
+      urls: Array.from(seenUrls).slice(-1000)
     }));
   }
 
-  // JSONP
+  // ================== Элементы DOM ==================
+  const wheel = document.getElementById('wheel');
+  const spinBtn = document.getElementById('spinBtn');
+  const resultCard = document.getElementById('resultCard');
+  const resultMedia = document.getElementById('resultMedia');
+  const resultTitle = document.getElementById('resultTitle');
+  const loadingEl = document.getElementById('loading');
+  const downloadBtn = document.getElementById('downloadResultBtn');
+  const spinAgainBtn = document.getElementById('spinAgainBtn');
+
+  let isSpinning = false;
+  let currentMediaUrl = null;
+  let currentResultPost = null;
+
+  // ================== JSONP запросы ==================
   function jsonp(url, cb, timeout=8000) {
     return new Promise((resolve, reject) => {
       const bases = ['https://www.reddit.com','https://old.reddit.com'];
@@ -308,191 +313,168 @@
     });
   }
 
-  async function fetchSubreddit(sub, limit=10) {
-    const data = await jsonp(`/r/${sub}/hot.json?limit=${limit}`, 'galleryCB');
-    return data.data.children;
-  }
-
-  function processPost(post) {
-    const data = post.data;
-    if(!data || data.stickied) return null;
-    if(state.seenPosts.has(data.id) || (data.url && state.seenUrls.has(data.url))) return null;
-    if(BLOCKLIST.test(data.title+' '+data.subreddit)) return null;
-    state.seenPosts.add(data.id);
-    if(data.url) state.seenUrls.add(data.url);
-    let type = 'image', mediaUrl = data.url, poster = null;
-    if(data.is_video && data.media?.reddit_video?.fallback_url) {
-      type = 'video';
-      mediaUrl = data.media.reddit_video.fallback_url;
-      poster = (data.thumbnail && data.thumbnail !== 'self') ? data.thumbnail : '';
-    } else if(data.domain === 'redgifs.com') {
-      const m = data.url.match(/\/watch\/([a-zA-Z0-9]+)/);
-      if(m) { type = 'iframe'; mediaUrl = `https://www.redgifs.com/ifr/${m[1]}`; }
-    } else if(data.url?.match(/\.(mp4|webm|mov)$/i) || data.url?.endsWith('.gifv')) {
-      type = 'video';
-      mediaUrl = data.url.replace('.gifv','.mp4');
-    } else if(data.url?.match(/\.(jpg|jpeg|png|gif|webp)$/i) || data.domain === 'i.redd.it' || data.domain === 'i.imgur.com') {
-      type = 'image';
+  async function fetchRandomPostFromSub(sub) {
+    const data = await jsonp(`/r/${sub}/hot.json?limit=10`, 'fortuneCB');
+    const posts = data.data.children;
+    // Фильтруем
+    const valid = posts.filter(p => {
+      const d = p.data;
+      if(!d || d.stickied) return false;
+      if(seenPosts.has(d.id) || (d.url && seenUrls.has(d.url))) return false;
+      if(BLOCKLIST.test(d.title+' '+d.subreddit)) return false;
+      return true;
+    });
+    if(valid.length === 0) return null;
+    const post = valid[Math.floor(Math.random() * valid.length)].data;
+    // Отмечаем как просмотренное
+    seenPosts.add(post.id);
+    if(post.url) seenUrls.add(post.url);
+    saveSeen();
+    // Определяем медиа
+    let mediaType = 'image', mediaUrl = post.url, poster = null;
+    if(post.is_video && post.media?.reddit_video?.fallback_url) {
+      mediaType = 'video';
+      mediaUrl = post.media.reddit_video.fallback_url;
+      poster = (post.thumbnail && post.thumbnail !== 'self') ? post.thumbnail : '';
+    } else if(post.domain === 'redgifs.com') {
+      const m = post.url.match(/\/watch\/([a-zA-Z0-9]+)/);
+      if(m) {
+        mediaType = 'iframe';
+        mediaUrl = `https://www.redgifs.com/ifr/${m[1]}`;
+      }
+    } else if(post.url?.match(/\.(mp4|webm|mov)$/i) || post.url?.endsWith('.gifv')) {
+      mediaType = 'video';
+      mediaUrl = post.url.replace('.gifv','.mp4');
+    } else if(post.url?.match(/\.(jpg|jpeg|png|gif|webp)$/i) || post.domain === 'i.redd.it' || post.domain === 'i.imgur.com') {
+      mediaType = 'image';
     } else return null;
-    return { id: data.id, title: data.title, subreddit: data.subreddit, type, mediaUrl, poster };
+    return { title: post.title, mediaType, mediaUrl, poster, id: post.id, subreddit: post.subreddit };
   }
 
-  // Рендер элемента галереи
-  function createGalleryItem(item) {
-    const div = document.createElement('div');
-    div.className = 'gallery-item';
-    div.dataset.index = state.galleryItems.length;
-    let media;
-    if(item.type === 'image') {
-      media = document.createElement('img');
-      media.src = item.mediaUrl;
-      media.loading = 'lazy';
-    } else if(item.type === 'video') {
-      media = document.createElement('video');
-      media.src = item.mediaUrl;
-      if(item.poster) media.poster = item.poster;
-      media.muted = true;
-      media.loop = true;
-      media.playsInline = true;
-      media.preload = 'metadata';
-    } else if(item.type === 'iframe') {
-      media = document.createElement('img');
-      media.src = 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="200" height="150"><rect fill="%23ddd" width="200" height="150"/><text fill="%23999" x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" font-size="20">▶</text></svg>';
-    }
-    div.appendChild(media);
-    const info = document.createElement('div');
-    info.className = 'item-info';
-    info.innerHTML = `<span>${item.title?.slice(0,30) || 'r/'+item.subreddit}</span><button class="like-btn-mini">♡</button>`;
-    div.appendChild(info);
-    div.addEventListener('click', (e) => {
-      if(e.target.classList.contains('like-btn-mini')) {
-        e.stopPropagation();
-        e.target.classList.toggle('liked');
-        return;
+  // ================== Логика колеса ==================
+  function getSectorIndex(degrees) {
+    // Угол 0 - верх, по часовой стрелке (у нас conic-gradient начинается с 0 сверху)
+    let normalized = (degrees % 360 + 360) % 360;
+    let index = Math.floor(normalized / SEGMENT_DEG);
+    return Math.min(index, SECTOR_COUNT-1);
+  }
+
+  async function spinWheel() {
+    if(isSpinning) return;
+    isSpinning = true;
+    spinBtn.disabled = true;
+    resultCard.style.display = 'none';
+    loadingEl.style.display = 'none';
+
+    // Случайное количество оборотов + точное попадание на сектор
+    const targetSector = Math.floor(Math.random() * SECTOR_COUNT);
+    const targetAngle = 360 * 5 + targetSector * SEGMENT_DEG + SEGMENT_DEG/2 + Math.random()*20;
+    // Устанавливаем начальный угол и запускаем анимацию
+    wheel.style.transition = 'transform 3.5s cubic-bezier(0.17, 0.67, 0.12, 0.99)';
+    wheel.style.transform = `rotate(${targetAngle}deg)`;
+
+    // Ждем окончания анимации
+    setTimeout(async () => {
+      const computedStyle = window.getComputedStyle(wheel);
+      const matrix = new DOMMatrixReadOnly(computedStyle.transform);
+      const angle = Math.atan2(matrix.b, matrix.a) * (180/Math.PI); // это угол поворота
+      let degrees = angle < 0 ? angle + 360 : angle;
+      const sectorIndex = getSectorIndex(degrees);
+      console.log('Stop at', degrees, 'sector', sectorIndex, CATEGORIES[sectorIndex].name);
+
+      // Загружаем контент для сектора
+      loadingEl.style.display = 'block';
+      resultCard.style.display = 'none';
+
+      const category = CATEGORIES[sectorIndex];
+      const sub = category.subs[Math.floor(Math.random() * category.subs.length)];
+      try {
+        const post = await fetchRandomPostFromSub(sub);
+        if(post) {
+          currentResultPost = post;
+          currentMediaUrl = post.mediaUrl;
+          displayResult(post);
+        } else {
+          // fallback
+          resultTitle.textContent = 'Повезет в другой раз...';
+          resultMedia.innerHTML = '<p style="color:white;">Нет контента</p>';
+          resultCard.style.display = 'flex';
+        }
+      } catch(e) {
+        resultTitle.textContent = 'Ошибка загрузки';
+        resultMedia.innerHTML = '<p>Попробуйте еще раз</p>';
+        resultCard.style.display = 'flex';
       }
-      openLightbox(parseInt(div.dataset.index));
-    });
-    return div;
+      loadingEl.style.display = 'none';
+      spinBtn.disabled = false;
+      isSpinning = false;
+    }, 3600);
   }
 
-  // Загрузка контента для категории
-  async function loadMoreContent() {
-    const subs = state.currentCat === 'all' ? ALL_SUBS : CATEGORIES[state.currentCat] || ALL_SUBS;
-    const randomSub = subs[Math.floor(Math.random()*subs.length)];
-    try {
-      const posts = await fetchSubreddit(randomSub, 6);
-      const newItems = posts.map(processPost).filter(Boolean);
-      state.galleryItems.push(...newItems);
-      const fragment = document.createDocumentFragment();
-      newItems.forEach(item => {
-        const el = createGalleryItem(item);
-        fragment.appendChild(el);
-      });
-      document.getElementById('masonryGrid').appendChild(fragment);
-      saveState();
-    } catch(e) {}
-  }
-
-  // Бесконечный скролл
-  const sentinel = document.getElementById('sentinel');
-  const observer = new IntersectionObserver(entries => {
-    if(entries[0].isIntersecting) loadMoreContent();
-  }, { rootMargin: '800px' });
-  observer.observe(sentinel);
-
-  // Категории
-  document.querySelectorAll('.pill-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      document.querySelectorAll('.pill-btn').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      state.currentCat = btn.dataset.cat;
-      state.galleryItems = [];
-      document.getElementById('masonryGrid').innerHTML = '';
-      loadMoreContent();
-    });
-  });
-
-  // Поиск (упрощённый)
-  document.getElementById('searchInput').addEventListener('keypress', (e) => {
-    if(e.key === 'Enter') {
-      const query = e.target.value.trim().toLowerCase();
-      if(query) {
-        state.currentCat = 'all';
-        state.galleryItems = [];
-        document.getElementById('masonryGrid').innerHTML = '';
-        // временно фильтруем загружаемое
-        const originalFetch = fetchSubreddit;
-        fetchSubreddit = async (sub, limit) => {
-          const posts = await originalFetch(sub, limit);
-          posts.data.children = posts.data.children.filter(p => p.data.title?.toLowerCase().includes(query));
-          return posts;
-        };
-        loadMoreContent().then(() => { fetchSubreddit = originalFetch; });
-      }
-    }
-  });
-
-  // Лайтбокс
-  const lightbox = document.getElementById('lightbox');
-  const lightboxContent = document.getElementById('lightboxContent');
-  function openLightbox(index) {
-    state.lightboxIndex = index;
-    lightbox.classList.add('open');
-    showLightboxMedia();
-  }
-  function closeLightbox() {
-    lightbox.classList.remove('open');
-    lightboxContent.innerHTML = '';
-  }
-  function showLightboxMedia() {
-    const item = state.galleryItems[state.lightboxIndex];
-    if(!item) return;
-    lightboxContent.innerHTML = '';
-    if(item.type === 'image') {
+  function displayResult(post) {
+    resultMedia.innerHTML = '';
+    resultTitle.textContent = post.title || 'Без названия';
+    if(post.mediaType === 'image') {
       const img = document.createElement('img');
-      img.src = item.mediaUrl;
-      lightboxContent.appendChild(img);
-    } else if(item.type === 'video') {
+      img.src = post.mediaUrl;
+      img.loading = 'lazy';
+      resultMedia.appendChild(img);
+    } else if(post.mediaType === 'video') {
       const video = document.createElement('video');
-      video.src = item.mediaUrl;
+      video.src = post.mediaUrl;
+      if(post.poster) video.poster = post.poster;
       video.controls = true;
       video.autoplay = true;
       video.playsInline = true;
-      lightboxContent.appendChild(video);
-    } else if(item.type === 'iframe') {
+      resultMedia.appendChild(video);
+    } else if(post.mediaType === 'iframe') {
       const iframe = document.createElement('iframe');
-      iframe.src = item.mediaUrl;
+      iframe.src = post.mediaUrl;
       iframe.allowFullscreen = true;
-      iframe.style.width = '80vw';
-      iframe.style.height = '80vh';
-      lightboxContent.appendChild(iframe);
+      iframe.width = '100%';
+      iframe.height = '400';
+      resultMedia.appendChild(iframe);
     }
+    resultCard.style.display = 'flex';
   }
-  document.getElementById('closeLightbox').addEventListener('click', closeLightbox);
-  document.getElementById('prevBtn').addEventListener('click', () => {
-    if(state.lightboxIndex > 0) {
-      state.lightboxIndex--;
-      showLightboxMedia();
+
+  // ================== Обработчики кнопок ==================
+  spinBtn.addEventListener('click', spinWheel);
+  spinAgainBtn.addEventListener('click', () => {
+    resultCard.style.display = 'none';
+    spinWheel();
+  });
+  downloadBtn.addEventListener('click', () => {
+    if(currentResultPost && currentMediaUrl) {
+      const a = document.createElement('a');
+      a.href = currentMediaUrl;
+      a.download = 'fortune_'+Date.now()+'.jpg';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
     }
   });
-  document.getElementById('nextBtn').addEventListener('click', () => {
-    if(state.lightboxIndex < state.galleryItems.length-1) {
-      state.lightboxIndex++;
-      showLightboxMedia();
+
+  // Добавляем метки секторов (визуально)
+  function createSectorLabels() {
+    const container = document.createElement('div');
+    container.className = 'sector-labels';
+    for(let i=0; i<SECTOR_COUNT; i++) {
+      const label = document.createElement('div');
+      label.className = 'sector-label';
+      label.textContent = CATEGORIES[i].name;
+      const angle = i * SEGMENT_DEG + SEGMENT_DEG/2;
+      const rad = (angle - 90) * Math.PI / 180;
+      const radius = 100; // примерно половина радиуса колеса
+      const x = Math.cos(rad) * radius;
+      const y = Math.sin(rad) * radius;
+      label.style.transform = `translate(${x}px, ${y}px) rotate(${angle}deg)`;
+      container.appendChild(label);
     }
-  });
-  lightbox.addEventListener('click', (e) => {
-    if(e.target === lightbox) closeLightbox();
-  });
-
-  // Кнопка наверх
-  window.addEventListener('scroll', () => {
-    document.getElementById('toTopBtn').classList.toggle('visible', scrollY > 500);
-  });
-  document.getElementById('toTopBtn').addEventListener('click', () => window.scrollTo({top:0, behavior:'smooth'}));
-
-  // Старт
-  loadMoreContent();
+    const wheelContainer = document.querySelector('.wheel-container');
+    wheelContainer.appendChild(container);
+  }
+  createSectorLabels();
 })();
 </script>
 </body>
