@@ -2,186 +2,291 @@
 <html lang="ru">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>🔥 VibeFlow — новый формат</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>📖 Lustre — арт-журнал</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;700&family=Inter:wght@400;500&display=swap" rel="stylesheet">
   <style>
+    :root {
+      --bg: #0d0d0f;
+      --surface: #1a1a1f;
+      --gold: #d4af37;
+      --rose: #e0a0b0;
+      --text: #eaeaea;
+      --muted: #999;
+      --radius: 12px;
+      --shadow: 0 10px 30px rgba(0,0,0,0.6);
+      --transition: 0.3s ease;
+    }
     * { margin:0; padding:0; box-sizing:border-box; }
     body {
-      background: #000;
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      overscroll-behavior: none;
-      overflow: hidden;
-      touch-action: pan-y;
-      user-select: none;
-      -webkit-user-select: none;
-    }
-    .app {
-      width: 100vw;
-      height: 100vh;
-      position: relative;
-      overflow: hidden;
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Inter', sans-serif;
+      min-height: 100vh;
       display: flex;
       flex-direction: column;
+      align-items: center;
+      overflow-x: hidden;
     }
-    .feed-container {
-      flex: 1;
-      position: relative;
+    .magazine {
+      max-width: 900px;
+      width: 100%;
+      padding: 1rem;
+    }
+
+    /* Обложка */
+    .cover {
+      text-align: center;
+      padding: 2rem 1rem;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+      margin-bottom: 2rem;
+    }
+    .cover-title {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(2.5rem, 8vw, 4.5rem);
+      font-weight: 700;
+      letter-spacing: 2px;
+      background: linear-gradient(135deg, var(--gold), var(--rose));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      filter: drop-shadow(0 2px 4px rgba(0,0,0,0.6));
+      margin-bottom: 0.5rem;
+    }
+    .cover-sub {
+      font-size: 1rem;
+      color: var(--muted);
+      letter-spacing: 3px;
+      text-transform: uppercase;
+    }
+    .cover-featured {
+      width: 100%;
+      max-height: 50vh;
+      object-fit: cover;
+      border-radius: var(--radius);
+      margin: 1.5rem 0;
+      box-shadow: var(--shadow);
+    }
+
+    /* Секции (категории) */
+    .sections-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+    .section-card {
+      background: var(--surface);
+      border-radius: var(--radius);
+      padding: 1.5rem 1rem;
+      text-align: center;
+      cursor: pointer;
+      transition: var(--transition);
+      border: 1px solid transparent;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    }
+    .section-card:hover {
+      border-color: var(--gold);
+      transform: translateY(-4px);
+      box-shadow: 0 12px 24px rgba(0,0,0,0.5);
+    }
+    .section-icon {
+      font-size: 2.5rem;
+      margin-bottom: 0.5rem;
+    }
+    .section-label {
+      font-weight: 500;
+      font-size: 0.9rem;
+    }
+
+    /* Лента внутри раздела (Masonry) */
+    .gallery {
+      columns: 3 200px;
+      column-gap: 1rem;
+      margin-top: 1rem;
+    }
+    .gallery-item {
+      break-inside: avoid;
+      margin-bottom: 1rem;
+      border-radius: var(--radius);
       overflow: hidden;
+      background: var(--surface);
+      box-shadow: var(--shadow);
+      transition: var(--transition);
+      cursor: pointer;
     }
-    .card-stack {
-      position: absolute;
-      top:0; left:0; width:100%; height:100%;
+    .gallery-item:hover { transform: scale(1.02); }
+    .gallery-item img, .gallery-item video {
+      width: 100%;
+      display: block;
     }
-    .card {
-      position: absolute;
+    .item-caption {
+      padding: 0.5rem;
+      font-size: 0.8rem;
+      color: var(--muted);
+    }
+
+    /* Полноэкранный просмотр */
+    .lightbox {
+      position: fixed;
       top:0; left:0; width:100%; height:100%;
-      background: #000;
+      background: rgba(0,0,0,0.95);
+      backdrop-filter: blur(10px);
+      z-index: 100;
       display: flex;
       align-items: center;
       justify-content: center;
-      transition: transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-      will-change: transform;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.4s;
     }
-    .card.swiping { transition: none; }
-    .card img, .card video, .card iframe {
-      width: 100%;
-      height: 100%;
-      object-fit: contain;
-      background: #000;
+    .lightbox.open { opacity:1; pointer-events: auto; }
+    .lightbox-content {
+      max-width: 90vw;
+      max-height: 90vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
     }
-    .card-info {
+    .lightbox-content img, .lightbox-content video {
+      max-width: 100%;
+      max-height: 90vh;
+      border-radius: 8px;
+      box-shadow: 0 0 30px rgba(0,0,0,0.8);
+    }
+    .close-lightbox {
       position: absolute;
-      bottom: 0;
-      left:0; right:0;
-      padding: 1rem 1rem 2rem;
-      background: linear-gradient(transparent, rgba(0,0,0,0.8));
-      color: #fff;
-      pointer-events: none;
+      top: 20px; right: 30px;
+      font-size: 2.5rem;
+      color: white;
+      cursor: pointer;
+      z-index: 10;
+      background: none;
+      border: none;
     }
-    .card-title {
-      font-size: 1rem; font-weight: 600; margin-bottom: 0.4rem;
-      text-shadow: 0 1px 3px rgba(0,0,0,0.7);
-      display: -webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;
+    .lightbox-nav {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 3rem;
+      color: white;
+      cursor: pointer;
+      background: rgba(0,0,0,0.5);
+      border-radius: 50%;
+      width: 50px; height: 50px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      user-select: none;
     }
-    .card-subreddit {
-      font-size: 0.8rem; opacity: 0.8; display: flex; align-items: center; gap: 0.3rem;
-    }
+    .lightbox-nav.prev { left: 10px; }
+    .lightbox-nav.next { right: 10px; }
 
-    .action-bar {
-      position: absolute; right: 12px; bottom: 120px;
-      display: flex; flex-direction: column; gap: 1.2rem; align-items: center;
-      z-index: 5;
-    }
-    .action-item {
-      display: flex; flex-direction: column; align-items: center; gap: 0.2rem;
-    }
-    .action-btn {
-      width: 48px; height: 48px; border-radius: 50%;
-      background: rgba(0,0,0,0.4); backdrop-filter: blur(10px);
-      display: flex; align-items: center; justify-content: center;
-      font-size: 1.5rem; color: white; border: 1px solid rgba(255,255,255,0.2);
-      cursor: pointer; transition: 0.2s; -webkit-tap-highlight-color: transparent;
-    }
-    .action-btn:active { transform: scale(0.9); background: rgba(255,255,255,0.2); }
-    .action-count { font-size: 0.75rem; color: white; text-shadow: 0 1px 2px black; }
-    .like-btn.liked { background: #e74c3c; border-color: #e74c3c; }
-    .dislike-btn.disliked { background: #3498db; border-color: #3498db; }
-
+    /* Поиск и кнопки */
     .top-bar {
-      position: absolute; top:0; left:0; right:0; padding: 1rem;
-      display: flex; justify-content: space-between; z-index: 10;
-      background: linear-gradient(rgba(0,0,0,0.6), transparent);
-      pointer-events: none;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
     }
-    .top-bar > * { pointer-events: auto; }
-    .mode-tabs {
-      display: flex; gap: 0.5rem; background: rgba(0,0,0,0.5);
-      backdrop-filter: blur(10px); border-radius: 30px; padding: 0.3rem;
+    .search-input {
+      background: var(--surface);
+      border: 1px solid rgba(255,255,255,0.1);
+      padding: 0.6rem 1rem;
+      border-radius: 20px;
+      color: white;
+      font-size: 0.9rem;
+      width: 200px;
     }
-    .mode-tab {
-      padding: 0.4rem 1.2rem; border-radius: 20px; font-weight: 600;
-      font-size: 0.8rem; color: #ccc; background: transparent; border: none; cursor: pointer;
+    .icon-btn {
+      background: var(--surface);
+      border: none;
+      color: var(--text);
+      font-size: 1.2rem;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
-    .mode-tab.active { background: #fff; color: #000; }
 
-    .xp-bar {
-      position: absolute; top: 0; left: 0; height: 3px; background: #e74c3c;
-      transition: width 0.5s; z-index: 15;
-    }
-
-    .nav-bottom {
-      position: absolute; bottom: 0; left:0; right:0;
-      background: rgba(0,0,0,0.7); backdrop-filter: blur(20px);
-      display: flex; justify-content: space-around; padding: 0.5rem 0;
-      border-top: 1px solid rgba(255,255,255,0.1); z-index: 10;
-    }
-    .nav-btn {
-      background: none; border: none; color: #aaa; font-size: 0.7rem;
-      display: flex; flex-direction: column; align-items: center; gap: 0.2rem;
-      cursor: pointer; font-weight: 500;
-    }
-    .nav-btn.active { color: #fff; }
-    .nav-btn span { font-size: 1.4rem; }
-
-    .loader {
-      position: absolute; top:50%; left:50%; transform: translate(-50%,-50%);
-      color: #fff; font-size: 1rem; z-index: 20;
+    .loading {
+      text-align: center;
+      padding: 2rem;
+      color: var(--muted);
     }
   </style>
 </head>
 <body>
-<div class="app">
-  <div class="xp-bar" id="xpBar" style="width:0%"></div>
-  <div class="feed-container" id="feedContainer">
-    <div class="card-stack" id="cardStack"></div>
-    <div class="loader" id="loader">⏳</div>
-  </div>
-
+<div class="magazine">
   <!-- Верхняя панель -->
   <div class="top-bar">
-    <div class="mode-tabs">
-      <button class="mode-tab active" data-mode="mixed">🔥 Для вас</button>
-      <button class="mode-tab" data-mode="following">⭐ Подписки</button>
-    </div>
-    <button style="background:rgba(255,255,255,0.2); border:none; color:white; padding:0.3rem 1rem; border-radius:20px; font-size:0.8rem;" id="searchBtn">🔍</button>
-  </div>
-
-  <!-- Боковая панель действий -->
-  <div class="action-bar" id="actionBar">
-    <div class="action-item">
-      <button class="action-btn like-btn" id="likeBtn">❤️</button>
-      <span class="action-count" id="likeCount">0</span>
-    </div>
-    <div class="action-item">
-      <button class="action-btn dislike-btn" id="dislikeBtn">💔</button>
-      <span class="action-count" id="dislikeCount">0</span>
-    </div>
-    <div class="action-item">
-      <button class="action-btn" id="saveBtn">🔖</button>
-    </div>
-    <div class="action-item">
-      <button class="action-btn" id="shareBtn">↗️</button>
+    <input type="text" class="search-input" placeholder="Поиск..." id="searchInput">
+    <div style="display:flex; gap:0.5rem;">
+      <button class="icon-btn" id="bookmarksBtn">🔖</button>
+      <button class="icon-btn" id="randomCoverBtn">🎲</button>
     </div>
   </div>
 
-  <!-- Нижняя навигация -->
-  <div class="nav-bottom">
-    <button class="nav-btn active" data-page="feed"><span>🏠</span>Лента</button>
-    <button class="nav-btn" data-page="explore"><span>🔎</span>Обзор</button>
-    <button class="nav-btn" data-page="bookmarks"><span>🔖</span>Избранное</button>
-    <button class="nav-btn" data-page="profile"><span>👤</span>Профиль</button>
+  <!-- Обложка номера -->
+  <div class="cover" id="coverSection">
+    <div class="cover-title">Lustre</div>
+    <div class="cover-sub">— curated beauty —</div>
+    <img class="cover-featured" id="coverImage" src="" alt="Cover" style="display:none;">
   </div>
+
+  <!-- Разделы -->
+  <div class="sections-grid" id="sectionsGrid">
+    <div class="section-card" data-section="portraits">
+      <div class="section-icon">👤</div>
+      <div class="section-label">Портреты</div>
+    </div>
+    <div class="section-card" data-section="artistic">
+      <div class="section-icon">🎨</div>
+      <div class="section-label">Арт-ню</div>
+    </div>
+    <div class="section-card" data-section="erotica">
+      <div class="section-icon">🌹</div>
+      <div class="section-label">Эротика</div>
+    </div>
+    <div class="section-card" data-section="motion">
+      <div class="section-icon">🎬</div>
+      <div class="section-label">Видео</div>
+    </div>
+    <div class="section-card" data-section="classic">
+      <div class="section-icon">📷</div>
+      <div class="section-label">Классика</div>
+    </div>
+  </div>
+
+  <!-- Галерея (появляется при выборе раздела) -->
+  <div id="galleryContainer" style="display:none;">
+    <button id="backToCover" style="background:none; border:none; color:var(--gold); cursor:pointer; margin-bottom:1rem;">← На обложку</button>
+    <div class="gallery" id="galleryGrid"></div>
+    <div class="loading" id="galleryLoader">Загрузка...</div>
+  </div>
+</div>
+
+<!-- Лайтбокс -->
+<div class="lightbox" id="lightbox">
+  <button class="close-lightbox" id="closeLightbox">&times;</button>
+  <div class="lightbox-content" id="lightboxContent"></div>
+  <div class="lightbox-nav prev" id="prevBtn">‹</div>
+  <div class="lightbox-nav next" id="nextBtn">›</div>
 </div>
 
 <script>
 (() => {
-  // ========== Состояние ==========
-  const SUBREDDITS = [
-    'GoneWild','RealGirls','PetiteGoneWild','AltGirls','gothsluts','redhead','Blonde',
-    'gentlemanboners','classysexy','ArtGW','Boudoir','FineArtNudes',
-    'Amateur','gwpublic','holdthemoan','onoff','porn','nsfw','cumsluts','anal','blowjobs',
-    '60fpsporn','porninfifteenseconds','nsfw_gif','adultgifs','milf','AsiansGoneWild'
-  ];
+  // Разделы и соответствующие сабреддиты
+  const SECTIONS = {
+    portraits: ['gentlemanboners','classysexy','PrettyGirlsNSFW','TotalBabes','BeautifulWomen','Nude_Selfie'],
+    artistic: ['ArtGW','Boudoir','FineArtNudes','ElegantNudes','TheArtOfTheTease','EroticArt'],
+    erotica: ['GoneWild','RealGirls','PetiteGoneWild','AltGirls','gothsluts','onoff','lingerie'],
+    motion: ['60fpsporn','porninfifteenseconds','nsfw_gif','adultgifs','pornvids','cumsluts'],
+    classic: ['gentlemanboners','classysexy','goddesses','TheFemaleForm','ElegantNudes','ArtisticNudes']
+  };
 
   const BLOCKLIST = /(gore|blood|murder|death|kill|violen|убийств|смерт|насил|труп|femboy|trap|trans|shemale|фембой|транс)/i;
 
@@ -190,48 +295,40 @@
     seenUrls: new Set(),
     bookmarks: [],
     likes: {},
-    xp: 0,
-    currentIndex: 0,
-    cards: [],
-    mode: 'mixed', // mixed | following (подписки на сабреддиты)
-    followingSubs: new Set(),
+    currentSection: null,
+    galleryPosts: [],
+    lightboxIndex: 0,
   };
 
   try {
-    const raw = localStorage.getItem('vibeflow_state');
+    const raw = localStorage.getItem('lustre_state');
     if(raw) {
       const s = JSON.parse(raw);
       state.bookmarks = s.bookmarks || [];
       state.likes = s.likes || {};
       if(s.seenPosts) state.seenPosts = new Set(s.seenPosts);
       if(s.seenUrls) state.seenUrls = new Set(s.seenUrls);
-      if(s.followingSubs) state.followingSubs = new Set(s.followingSubs);
-      state.xp = s.xp || 0;
     }
   } catch(e){}
-
   function saveState() {
-    const toSave = {
+    localStorage.setItem('lustre_state', JSON.stringify({
       bookmarks: state.bookmarks,
       likes: state.likes,
       seenPosts: Array.from(state.seenPosts).slice(-2000),
       seenUrls: Array.from(state.seenUrls).slice(-2000),
-      followingSubs: Array.from(state.followingSubs),
-      xp: state.xp,
-    };
-    localStorage.setItem('vibeflow_state', JSON.stringify(toSave));
+    }));
   }
 
-  // ========== JSONP ==========
+  // JSONP
   function jsonp(url, cb, timeout=8000) {
     return new Promise((resolve, reject) => {
-      const bases = ['https://www.reddit.com', 'https://old.reddit.com'];
+      const bases = ['https://www.reddit.com','https://old.reddit.com'];
       let attempt = 0;
       const tryLoad = () => {
         if(attempt >= bases.length) return reject(new Error('JSONP fail'));
         const base = bases[attempt];
         const script = document.createElement('script');
-        const full = base + url + (url.includes('?')?'&':'?') + 'jsonp=' + cb + '&_=' + Date.now();
+        const full = base + url + (url.includes('?')?'&':'?')+'jsonp='+cb+'&_='+Date.now();
         const timer = setTimeout(() => { cleanup(); attempt++; tryLoad(); }, timeout);
         function cleanup() { clearTimeout(timer); delete window[cb]; if(script.parentNode) script.parentNode.removeChild(script); }
         window[cb] = (data) => { cleanup(); resolve(data); };
@@ -243,280 +340,197 @@
     });
   }
 
-  async function fetchPosts(sub, limit=5) {
-    const data = await jsonp(`/r/${sub}/hot.json?limit=${limit}`, 'feedCB');
+  async function fetchSubredditPosts(sub, limit=10) {
+    const data = await jsonp(`/r/${sub}/hot.json?limit=${limit}`, 'redditCB');
     return data.data.children;
   }
 
-  // ========== Создание карточки ==========
-  function createCardElement(post) {
+  function filterAndMap(post) {
     const data = post.data;
     if(!data || data.stickied) return null;
     if(state.seenPosts.has(data.id) || (data.url && state.seenUrls.has(data.url))) return null;
     if(BLOCKLIST.test(data.title+' '+data.subreddit)) return null;
-
     state.seenPosts.add(data.id);
     if(data.url) state.seenUrls.add(data.url);
-
-    const card = document.createElement('div');
-    card.className = 'card';
-    card.dataset.postId = data.id;
-    card.dataset.subreddit = data.subreddit;
-    card.dataset.likes = state.likes[data.id]?.likes || 0;
-    card.dataset.dislikes = state.likes[data.id]?.dislikes || 0;
-
-    let mediaEl;
+    let media = { type:'image', url: data.url };
     if(data.is_video && data.media?.reddit_video?.fallback_url) {
-      mediaEl = document.createElement('video');
-      mediaEl.src = data.media.reddit_video.fallback_url;
-      mediaEl.controls = false;
-      mediaEl.loop = true;
-      mediaEl.muted = true;
-      mediaEl.playsInline = true;
-      mediaEl.setAttribute('playsinline', '');
-      mediaEl.preload = 'metadata';
-      if(data.thumbnail && data.thumbnail !== 'self') mediaEl.poster = data.thumbnail;
+      media = { type:'video', url: data.media.reddit_video.fallback_url, poster: data.thumbnail };
     } else if(data.domain === 'redgifs.com') {
-      const match = data.url.match(/\/watch\/([a-zA-Z0-9]+)/);
-      if(match) {
-        mediaEl = document.createElement('iframe');
-        mediaEl.src = `https://www.redgifs.com/ifr/${match[1]}`;
-        mediaEl.allowFullscreen = true;
-        mediaEl.allow = 'autoplay; fullscreen';
-      }
-    } else if(data.url?.match(/\.(jpg|jpeg|png|gif|webp)$/i) || data.domain === 'i.redd.it' || data.domain === 'i.imgur.com') {
-      mediaEl = document.createElement('img');
-      mediaEl.src = data.url;
+      const m = data.url.match(/\/watch\/([a-zA-Z0-9]+)/);
+      if(m) media = { type:'iframe', url: `https://www.redgifs.com/ifr/${m[1]}` };
     } else if(data.url?.match(/\.(mp4|webm|mov)$/i) || data.url?.endsWith('.gifv')) {
-      mediaEl = document.createElement('video');
-      mediaEl.src = data.url.replace(/\.gifv$/, '.mp4');
-      mediaEl.controls = false;
-      mediaEl.loop = true;
-      mediaEl.muted = true;
-      mediaEl.playsInline = true;
-      mediaEl.setAttribute('playsinline', '');
-    } else {
-      return null;
-    }
-
-    card.appendChild(mediaEl);
-
-    const info = document.createElement('div');
-    info.className = 'card-info';
-    info.innerHTML = `
-      <div class="card-title">${data.title || ''}</div>
-      <div class="card-subreddit"><span>🔴</span> r/${data.subreddit}</div>
-    `;
-    card.appendChild(info);
-
-    return card;
+      media = { type:'video', url: data.url.replace('.gifv','.mp4') };
+    } else if(data.url?.match(/\.(jpg|jpeg|png|gif|webp)$/i) || data.domain === 'i.redd.it' || data.domain === 'i.imgur.com') {
+      media = { type:'image', url: data.url };
+    } else return null;
+    return { id:data.id, title:data.title, subreddit:data.subreddit, media };
   }
 
-  // ========== Логика свайпов ==========
-  let startY = 0;
-  let currentY = 0;
-  let swiping = false;
-  const stack = document.getElementById('cardStack');
-  const feedContainer = document.getElementById('feedContainer');
-
-  function updateStack() {
-    const cards = stack.children;
-    for(let i = 0; i < cards.length; i++) {
-      const card = cards[i];
-      card.style.transform = `translateY(${(i - state.currentIndex) * 100}%)`;
-      card.style.transition = 'transform 0.3s ease';
-      card.classList.remove('swiping');
-
-      // Воспроизведение видео при активной карточке
-      const video = card.querySelector('video');
-      if(video) {
-        if(i === state.currentIndex) video.play().catch(()=>{});
-        else { video.pause(); video.currentTime = 0; }
-      }
-      // Остановка iframe (RedGIFs)
-      const iframe = card.querySelector('iframe');
-      if(iframe && i !== state.currentIndex) {
-        iframe.src = iframe.src; // перезагрузка для остановки
-      }
-    }
-    updateActionBar();
-  }
-
-  function updateActionBar() {
-    const currentCard = stack.children[state.currentIndex];
-    if(!currentCard) return;
-    document.getElementById('likeCount').textContent = currentCard.dataset.likes || 0;
-    document.getElementById('dislikeCount').textContent = currentCard.dataset.dislikes || 0;
-    document.getElementById('likeBtn').classList.toggle('liked', currentCard.dataset.liked === 'true');
-    document.getElementById('dislikeBtn').classList.toggle('disliked', currentCard.dataset.disliked === 'true');
-    document.getElementById('saveBtn').style.background = state.bookmarks.some(b => b.id === currentCard.dataset.postId) ? '#f1c40f' : '';
-  }
-
-  function swipeTo(index) {
-    if(index < 0 || index >= stack.children.length) return;
-    state.currentIndex = index;
-    updateStack();
-    // Добавить XP
-    state.xp = Math.min(state.xp + 2, 100);
-    document.getElementById('xpBar').style.width = state.xp + '%';
-    saveState();
-
-    // Подгрузка новых карточек, если осталось меньше 3
-    if(stack.children.length - state.currentIndex < 3) loadMoreCards();
-  }
-
-  // Обработчики касаний/мыши
-  feedContainer.addEventListener('touchstart', (e) => {
-    startY = e.touches[0].clientY;
-    swiping = true;
-  }, {passive: false});
-
-  feedContainer.addEventListener('touchmove', (e) => {
-    if(!swiping) return;
-    currentY = e.touches[0].clientY;
-    const diff = currentY - startY;
-    const card = stack.children[state.currentIndex];
-    if(card) {
-      card.classList.add('swiping');
-      card.style.transform = `translateY(calc(${(0) * 100}% + ${diff}px))`;
-    }
-  }, {passive: false});
-
-  feedContainer.addEventListener('touchend', () => {
-    if(!swiping) return;
-    swiping = false;
-    const diff = currentY - startY;
-    const threshold = 50;
-    if(diff < -threshold) swipeTo(state.currentIndex + 1); // свайп вверх
-    else if(diff > threshold) swipeTo(state.currentIndex - 1); // свайп вниз
-    else updateStack();
-  });
-
-  // Поддержка мыши для десктопа
-  feedContainer.addEventListener('mousedown', (e) => {
-    startY = e.clientY;
-    swiping = true;
-    e.preventDefault();
-  });
-  window.addEventListener('mousemove', (e) => {
-    if(!swiping) return;
-    currentY = e.clientY;
-    const diff = currentY - startY;
-    const card = stack.children[state.currentIndex];
-    if(card) {
-      card.classList.add('swiping');
-      card.style.transform = `translateY(calc(${0 * 100}% + ${diff}px))`;
-    }
-  });
-  window.addEventListener('mouseup', () => {
-    if(!swiping) return;
-    swiping = false;
-    const diff = currentY - startY;
-    const threshold = 50;
-    if(diff < -threshold) swipeTo(state.currentIndex + 1);
-    else if(diff > threshold) swipeTo(state.currentIndex - 1);
-    else updateStack();
-  });
-
-  // ========== Загрузка карточек ==========
-  async function loadMoreCards() {
-    document.getElementById('loader').style.display = 'block';
+  // Показ случайной обложки
+  async function loadCoverImage() {
+    const coverImg = document.getElementById('coverImage');
+    coverImg.style.display = 'none';
+    const allSubs = Object.values(SECTIONS).flat();
+    const randomSub = allSubs[Math.floor(Math.random()*allSubs.length)];
     try {
-      const sub = SUBREDDITS[Math.floor(Math.random() * SUBREDDITS.length)];
-      const posts = await fetchPosts(sub, 5);
-      const fragment = document.createDocumentFragment();
-      posts.forEach(post => {
-        const card = createCardElement(post);
-        if(card) fragment.appendChild(card);
-      });
-      stack.appendChild(fragment);
+      const posts = await fetchSubredditPosts(randomSub, 5);
+      const processed = posts.map(filterAndMap).filter(Boolean);
+      const imagePost = processed.find(p => p.media.type === 'image');
+      if(imagePost) {
+        coverImg.src = imagePost.media.url;
+        coverImg.style.display = 'block';
+      }
     } catch(e) {}
-    document.getElementById('loader').style.display = 'none';
   }
 
-  // ========== Кнопки действий ==========
-  document.getElementById('likeBtn').addEventListener('click', () => {
-    const card = stack.children[state.currentIndex];
-    if(!card) return;
-    const postId = card.dataset.postId;
-    if(!state.likes[postId]) state.likes[postId] = { likes: 0, dislikes: 0 };
-    state.likes[postId].likes++;
-    card.dataset.likes = state.likes[postId].likes;
-    card.dataset.liked = 'true';
-    saveState();
-    updateActionBar();
-    // анимация сердечка
-    const heart = document.createElement('div');
-    heart.textContent = '❤️';
-    heart.style.cssText = 'position:fixed; top:50%; left:50%; font-size:3rem; pointer-events:none; animation: fly 0.8s ease-out forwards;';
-    document.body.appendChild(heart);
-    heart.addEventListener('animationend', () => heart.remove());
-    const style = document.createElement('style');
-    style.textContent = '@keyframes fly{0%{opacity:1;transform:translate(-50%,-50%) scale(1)}100%{opacity:0;transform:translate(-50%,-200%) scale(2)}}';
-    document.head.appendChild(style);
-  });
+  // Построение галереи раздела
+  async function loadSection(sectionKey) {
+    state.currentSection = sectionKey;
+    document.getElementById('sectionsGrid').style.display = 'none';
+    document.getElementById('coverSection').style.display = 'none';
+    document.getElementById('galleryContainer').style.display = 'block';
+    const grid = document.getElementById('galleryGrid');
+    grid.innerHTML = '';
+    document.getElementById('galleryLoader').style.display = 'block';
+    const subs = SECTIONS[sectionKey];
+    let allPosts = [];
+    for(const sub of subs) {
+      try {
+        const posts = await fetchSubredditPosts(sub, 6);
+        const filtered = posts.map(filterAndMap).filter(Boolean);
+        allPosts = allPosts.concat(filtered);
+      } catch(e){}
+    }
+    // Перемешиваем
+    allPosts.sort(() => Math.random() - 0.5);
+    state.galleryPosts = allPosts;
+    renderGallery(allPosts);
+    document.getElementById('galleryLoader').style.display = 'none';
+  }
 
-  document.getElementById('dislikeBtn').addEventListener('click', () => {
-    const card = stack.children[state.currentIndex];
-    if(!card) return;
-    const postId = card.dataset.postId;
-    if(!state.likes[postId]) state.likes[postId] = { likes: 0, dislikes: 0 };
-    state.likes[postId].dislikes++;
-    card.dataset.dislikes = state.likes[postId].dislikes;
-    card.dataset.disliked = 'true';
-    saveState();
-    updateActionBar();
-    swipeTo(state.currentIndex + 1);
-  });
+  function renderGallery(posts) {
+    const grid = document.getElementById('galleryGrid');
+    posts.forEach((post, index) => {
+      const item = document.createElement('div');
+      item.className = 'gallery-item';
+      item.dataset.index = index;
+      if(post.media.type === 'image') {
+        const img = document.createElement('img');
+        img.src = post.media.url;
+        img.loading = 'lazy';
+        item.appendChild(img);
+      } else if(post.media.type === 'video') {
+        const video = document.createElement('video');
+        video.src = post.media.url;
+        if(post.media.poster) video.poster = post.media.poster;
+        video.muted = true;
+        video.loop = true;
+        video.playsInline = true;
+        video.setAttribute('playsinline', '');
+        video.preload = 'metadata';
+        item.appendChild(video);
+      } else if(post.media.type === 'iframe') {
+        // превью
+        const thumb = document.createElement('img');
+        thumb.src = 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"><rect fill="%23111" width="100" height="100"/><text fill="white" x="50%" y="50%" dominant-baseline="middle" text-anchor="middle">▶</text></svg>';
+        item.appendChild(thumb);
+      }
+      const caption = document.createElement('div');
+      caption.className = 'item-caption';
+      caption.textContent = post.title?.slice(0, 40) || '';
+      item.appendChild(caption);
+      item.addEventListener('click', () => openLightbox(index));
+      grid.appendChild(item);
+    });
+  }
 
-  document.getElementById('saveBtn').addEventListener('click', () => {
-    const card = stack.children[state.currentIndex];
-    if(!card) return;
-    const postId = card.dataset.postId;
-    const idx = state.bookmarks.findIndex(b => b.id === postId);
-    if(idx > -1) state.bookmarks.splice(idx, 1);
-    else state.bookmarks.unshift({ id: postId, title: card.querySelector('.card-title')?.textContent, subreddit: card.dataset.subreddit });
-    saveState();
-    updateActionBar();
-  });
-
-  document.getElementById('shareBtn').addEventListener('click', () => {
-    const card = stack.children[state.currentIndex];
-    if(card && navigator.share) {
-      navigator.share({ title: card.querySelector('.card-title')?.textContent, url: `https://reddit.com/r/${card.dataset.subreddit}` });
+  // Лайтбокс
+  const lightbox = document.getElementById('lightbox');
+  const lightboxContent = document.getElementById('lightboxContent');
+  function openLightbox(index) {
+    state.lightboxIndex = index;
+    lightbox.classList.add('open');
+    showLightboxMedia();
+  }
+  function closeLightbox() {
+    lightbox.classList.remove('open');
+    lightboxContent.innerHTML = '';
+  }
+  function showLightboxMedia() {
+    const post = state.galleryPosts[state.lightboxIndex];
+    if(!post) return;
+    lightboxContent.innerHTML = '';
+    if(post.media.type === 'image') {
+      const img = document.createElement('img');
+      img.src = post.media.url;
+      lightboxContent.appendChild(img);
+    } else if(post.media.type === 'video') {
+      const video = document.createElement('video');
+      video.src = post.media.url;
+      video.controls = true;
+      video.autoplay = true;
+      video.playsInline = true;
+      lightboxContent.appendChild(video);
+    } else if(post.media.type === 'iframe') {
+      const iframe = document.createElement('iframe');
+      iframe.src = post.media.url;
+      iframe.allowFullscreen = true;
+      iframe.style.width = '80vw';
+      iframe.style.height = '80vh';
+      lightboxContent.appendChild(iframe);
+    }
+  }
+  document.getElementById('closeLightbox').addEventListener('click', closeLightbox);
+  document.getElementById('prevBtn').addEventListener('click', () => {
+    if(state.lightboxIndex > 0) {
+      state.lightboxIndex--;
+      showLightboxMedia();
     }
   });
-
-  // ========== Навигация ==========
-  document.querySelectorAll('.nav-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      if(btn.dataset.page === 'feed') { /* уже на ленте */ }
-      else if(btn.dataset.page === 'bookmarks') alert('Раздел Избранное в разработке');
-      else if(btn.dataset.page === 'explore') alert('Обзор пока не реализован');
-      else if(btn.dataset.page === 'profile') alert('Профиль: XP ' + state.xp);
-      document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-    });
+  document.getElementById('nextBtn').addEventListener('click', () => {
+    if(state.lightboxIndex < state.galleryPosts.length-1) {
+      state.lightboxIndex++;
+      showLightboxMedia();
+    }
+  });
+  lightbox.addEventListener('click', (e) => {
+    if(e.target === lightbox) closeLightbox();
   });
 
-  document.querySelectorAll('.mode-tab').forEach(tab => {
-    tab.addEventListener('click', () => {
-      document.querySelectorAll('.mode-tab').forEach(t => t.classList.remove('active'));
-      tab.classList.add('active');
-      state.mode = tab.dataset.mode;
-      // Если подписки, фильтруем сабреддиты
-    });
+  // Навигация
+  document.getElementById('sectionsGrid').addEventListener('click', (e) => {
+    const card = e.target.closest('.section-card');
+    if(card) loadSection(card.dataset.section);
+  });
+  document.getElementById('backToCover').addEventListener('click', () => {
+    document.getElementById('galleryContainer').style.display = 'none';
+    document.getElementById('sectionsGrid').style.display = '';
+    document.getElementById('coverSection').style.display = '';
+    state.currentSection = null;
   });
 
-  document.getElementById('searchBtn').addEventListener('click', () => {
-    const query = prompt('Поиск:');
-    if(query) alert('Поиск не реализован');
+  document.getElementById('randomCoverBtn').addEventListener('click', loadCoverImage);
+  document.getElementById('bookmarksBtn').addEventListener('click', () => {
+    alert('Закладки: ' + state.bookmarks.length + ' шт. (просмотр в разработке)');
+  });
+
+  document.getElementById('searchInput').addEventListener('keypress', (e) => {
+    if(e.key === 'Enter') {
+      const query = e.target.value.trim();
+      if(query) {
+        // простой поиск: загружаем раздел "эротика" и фильтруем по названию
+        loadSection('erotica').then(() => {
+          const filtered = state.galleryPosts.filter(p => p.title.toLowerCase().includes(query.toLowerCase()));
+          state.galleryPosts = filtered;
+          document.getElementById('galleryGrid').innerHTML = '';
+          renderGallery(filtered);
+        });
+      }
+    }
   });
 
   // Инициализация
-  loadMoreCards().then(() => {
-    updateStack();
-  });
+  loadCoverImage();
 })();
 </script>
 </body>
