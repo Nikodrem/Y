@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>🜂 Obsidian Dream — NSFW AI Генератор</title>
   <style>
     :root {
@@ -12,35 +12,58 @@
       --accent2: #ff4d7a;
       --text: #e0e0f0;
       --muted: #6b6b80;
-      --radius: 16px;
+      --radius: 24px;
       --shadow: 0 0 30px rgba(180, 75, 255, 0.3);
     }
-    * { margin:0; padding:0; box-sizing:border-box; }
-    body {
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    html, body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
       background: var(--bg);
-      color: var(--text);
       font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-      min-height: 100vh;
+      color: var(--text);
       display: flex;
       align-items: center;
       justify-content: center;
-      padding: 1rem;
     }
+
+    /* Основной контейнер — фиксирован, без скролла */
     .app {
-      max-width: 600px;
       width: 100%;
-      background: var(--surface);
-      border-radius: 24px;
-      padding: 2rem 1.5rem;
-      box-shadow: var(--shadow), 0 8px 24px rgba(0,0,0,0.6);
-      border: 1px solid rgba(255,255,255,0.08);
+      max-width: 700px;
+      height: 100%;
       display: flex;
       flex-direction: column;
-      align-items: center;
-      gap: 1.5rem;
+      background: var(--surface);
+      border-radius: 0;
+      box-shadow: var(--shadow), 0 8px 24px rgba(0,0,0,0.6);
+      border: 1px solid rgba(255,255,255,0.08);
+      overflow: hidden;
+      position: relative;
+    }
+
+    @media (min-width: 600px) {
+      .app {
+        border-radius: 32px;
+        height: 95%;
+        max-height: 900px;
+        margin: 0 1rem;
+      }
+    }
+
+    /* Шапка */
+    .header {
+      padding: 1.5rem 1.5rem 0.8rem;
+      text-align: center;
+      flex-shrink: 0;
     }
     .logo {
-      font-size: 2.5rem;
+      font-size: 2.2rem;
       font-weight: 700;
       letter-spacing: 2px;
       background: linear-gradient(135deg, var(--accent), var(--accent2));
@@ -49,24 +72,26 @@
       filter: drop-shadow(0 0 8px rgba(180,75,255,0.5));
     }
     .subtitle {
-      font-size: 0.9rem;
+      font-size: 0.85rem;
       color: var(--muted);
-      margin-top: -0.8rem;
+      margin-top: 0.2rem;
     }
 
+    /* Блок ввода */
     .input-group {
       display: flex;
-      width: 100%;
+      padding: 0 1.5rem 1rem;
       gap: 0.5rem;
+      flex-shrink: 0;
     }
     .prompt-input {
       flex: 1;
-      padding: 0.9rem 1.2rem;
-      background: rgba(255,255,255,0.05);
+      padding: 0.8rem 1.2rem;
+      background: rgba(255,255,255,0.06);
       border: 1px solid rgba(255,255,255,0.12);
       border-radius: 30px;
       color: white;
-      font-size: 1rem;
+      font-size: 0.95rem;
       outline: none;
       transition: 0.3s;
     }
@@ -75,19 +100,20 @@
       box-shadow: 0 0 12px rgba(180,75,255,0.2);
     }
     .generate-btn {
-      padding: 0.9rem 1.8rem;
+      padding: 0.8rem 1.5rem;
       background: var(--accent);
       border: none;
       border-radius: 30px;
       color: white;
       font-weight: 700;
-      font-size: 1rem;
+      font-size: 0.95rem;
       cursor: pointer;
       transition: 0.2s;
       display: flex;
       align-items: center;
-      gap: 0.4rem;
+      gap: 0.3rem;
       box-shadow: 0 4px 15px rgba(180,75,255,0.4);
+      white-space: nowrap;
     }
     .generate-btn:hover {
       background: #c56bff;
@@ -99,10 +125,11 @@
       box-shadow: none;
     }
 
+    /* Зона результата */
     .result-area {
-      width: 100%;
+      flex: 1;
+      margin: 0 1.5rem 1rem;
       position: relative;
-      min-height: 300px;
       background: rgba(0,0,0,0.3);
       border-radius: var(--radius);
       overflow: hidden;
@@ -112,24 +139,28 @@
       justify-content: center;
     }
     .result-area img {
-      width: 100%;
-      height: auto;
+      max-width: 100%;
+      max-height: 100%;
+      object-fit: contain;
       display: block;
+      border-radius: var(--radius);
     }
     .placeholder {
       color: var(--muted);
       text-align: center;
-      padding: 2rem;
+      padding: 1rem;
+      font-size: 0.95rem;
     }
     .loading-spinner {
       display: flex;
       flex-direction: column;
       align-items: center;
       gap: 0.5rem;
+      color: var(--muted);
     }
     .spinner {
-      width: 40px;
-      height: 40px;
+      width: 44px;
+      height: 44px;
       border: 3px solid rgba(255,255,255,0.1);
       border-top-color: var(--accent);
       border-radius: 50%;
@@ -137,55 +168,46 @@
     }
     @keyframes spin { to { transform: rotate(360deg); } }
 
+    /* Кнопки действий под результатом */
     .action-buttons {
       display: flex;
-      gap: 0.8rem;
-      margin-top: 0.5rem;
+      justify-content: center;
+      gap: 0.6rem;
+      padding: 0 1.5rem 0.5rem;
+      flex-shrink: 0;
     }
     .icon-btn {
       background: rgba(255,255,255,0.06);
       border: 1px solid rgba(255,255,255,0.1);
       color: var(--text);
-      padding: 0.6rem 1.2rem;
+      padding: 0.5rem 1rem;
       border-radius: 20px;
       cursor: pointer;
-      font-size: 0.9rem;
+      font-size: 0.85rem;
       transition: 0.2s;
-    }
-    .icon-btn:hover { background: rgba(255,255,255,0.12); }
-
-    .history {
-      width: 100%;
-      margin-top: 1rem;
-    }
-    .history-title {
-      font-weight: 600;
-      margin-bottom: 0.5rem;
       display: flex;
       align-items: center;
-      justify-content: space-between;
+      gap: 0.3rem;
     }
-    .history-grid {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 0.5rem;
-      max-height: 200px;
-      overflow-y: auto;
-    }
-    .history-thumb {
-      width: 80px;
-      height: 80px;
-      border-radius: 8px;
-      object-fit: cover;
-      cursor: pointer;
-      transition: 0.2s;
-      border: 1px solid transparent;
-    }
-    .history-thumb:hover {
-      border-color: var(--accent);
-      transform: scale(1.05);
+    .icon-btn:hover {
+      background: rgba(255,255,255,0.12);
     }
 
+    /* История */
+    .history {
+      padding: 0 1.5rem 1rem;
+      flex-shrink: 0;
+      overflow-y: auto;
+      max-height: 120px;
+    }
+    .history-title {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.3rem;
+      font-weight: 600;
+      font-size: 0.9rem;
+    }
     .clear-btn {
       background: none;
       border: none;
@@ -193,12 +215,66 @@
       cursor: pointer;
       font-size: 0.8rem;
     }
+    .history-grid {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: nowrap;
+      overflow-x: auto;
+      padding-bottom: 0.3rem;
+    }
+    .history-thumb {
+      width: 70px;
+      height: 70px;
+      border-radius: 10px;
+      object-fit: cover;
+      cursor: pointer;
+      border: 1px solid transparent;
+      flex-shrink: 0;
+      transition: 0.2s;
+    }
+    .history-thumb:hover {
+      border-color: var(--accent);
+      transform: scale(1.05);
+    }
+
+    /* Полноэкранный просмотр */
+    .lightbox {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.95);
+      backdrop-filter: blur(8px);
+      z-index: 100;
+      align-items: center;
+      justify-content: center;
+    }
+    .lightbox img {
+      max-width: 95vw;
+      max-height: 95vh;
+      object-fit: contain;
+      border-radius: 12px;
+      box-shadow: 0 0 40px rgba(0,0,0,0.9);
+    }
+    .lightbox-close {
+      position: absolute;
+      top: 20px;
+      right: 30px;
+      font-size: 2.5rem;
+      color: white;
+      cursor: pointer;
+      z-index: 10;
+    }
   </style>
 </head>
 <body>
   <div class="app">
-    <div class="logo">🜂 Obsidian Dream</div>
-    <div class="subtitle">нейро-генератор NSFW</div>
+    <div class="header">
+      <div class="logo">🜂 Obsidian Dream</div>
+      <div class="subtitle">нейро-генератор NSFW</div>
+    </div>
 
     <div class="input-group">
       <input type="text" class="prompt-input" id="promptInput" placeholder="Опишите изображение... например: девушка с тату, неоновый свет, киберпанк" autofocus>
@@ -230,9 +306,9 @@
   </div>
 
   <!-- Полноэкранный просмотр -->
-  <div id="lightbox" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.95); z-index:100; align-items:center; justify-content:center;" onclick="this.style.display='none'">
-    <img id="lightboxImage" src="" style="max-width:95vw; max-height:95vh; object-fit:contain; border-radius:8px; box-shadow:0 0 30px rgba(0,0,0,0.8);">
-    <span style="position:absolute; top:20px; right:30px; font-size:2.5rem; color:white; cursor:pointer;" onclick="document.getElementById('lightbox').style.display='none'">&times;</span>
+  <div class="lightbox" id="lightbox">
+    <span class="lightbox-close" id="closeLightbox">&times;</span>
+    <img id="lightboxImage" src="" alt="Полноэкранный просмотр">
   </div>
 
   <script>
@@ -251,18 +327,18 @@
     const clearHistoryBtn = document.getElementById('clearHistoryBtn');
     const lightbox = document.getElementById('lightbox');
     const lightboxImage = document.getElementById('lightboxImage');
+    const closeLightbox = document.getElementById('closeLightbox');
 
-    const HISTORY_KEY = 'obsidian_dream_history';
+    const HISTORY_KEY = 'obsidian_dream_history_v2';
     let history = [];
 
-    // Загружаем историю
+    // Загрузка истории
     try {
       const saved = localStorage.getItem(HISTORY_KEY);
-      if(saved) history = JSON.parse(saved);
-    } catch(e) { history = []; }
+      if (saved) history = JSON.parse(saved);
+    } catch (e) { history = []; }
     renderHistory();
 
-    // Сохраняем историю
     function saveHistory() {
       localStorage.setItem(HISTORY_KEY, JSON.stringify(history));
       renderHistory();
@@ -291,21 +367,18 @@
     }
 
     async function generateImage(prompt) {
-      // Формируем URL для Pollinations.ai
       const seed = Math.floor(Math.random() * 1000000);
       const encodedPrompt = encodeURIComponent(prompt + ', highly detailed, realistic, NSFW allowed, erotic, beautiful, artistic');
       const width = 512;
       const height = 768;
       const imageUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=${width}&height=${height}&nologo=true&seed=${seed}`;
 
-      // Показываем загрузку
       placeholder.style.display = 'none';
       resultImage.style.display = 'none';
       loadingSpinner.style.display = 'flex';
       actionButtons.style.display = 'none';
 
       try {
-        // Ждём загрузки изображения
         const img = new Image();
         img.src = imageUrl;
         await new Promise((resolve, reject) => {
@@ -315,7 +388,6 @@
         });
 
         setResultImage(imageUrl);
-        // Автоматически добавляем в историю
         addToHistory(imageUrl, prompt);
       } catch (e) {
         alert('Не удалось сгенерировать изображение. Попробуйте другой запрос или повторите позже.');
@@ -325,17 +397,15 @@
     }
 
     function addToHistory(url, prompt) {
-      // Не добавляем дубликаты подряд
-      if(history.length > 0 && history[0].url === url) return;
+      if (history.length > 0 && history[0].url === url) return;
       history.unshift({ url, prompt, date: Date.now() });
-      // Ограничим историю 50 записями
-      if(history.length > 50) history.pop();
+      if (history.length > 50) history.pop();
       saveHistory();
     }
 
     generateBtn.addEventListener('click', () => {
       const prompt = promptInput.value.trim();
-      if(!prompt) {
+      if (!prompt) {
         alert('Введите описание изображения.');
         return;
       }
@@ -343,13 +413,12 @@
     });
 
     promptInput.addEventListener('keypress', (e) => {
-      if(e.key === 'Enter') generateBtn.click();
+      if (e.key === 'Enter') generateBtn.click();
     });
 
     downloadBtn.addEventListener('click', () => {
       const url = resultImage.src;
-      if(!url) return;
-      // Скачивание через ссылку
+      if (!url) return;
       const a = document.createElement('a');
       a.href = url;
       a.download = 'obsidian-dream-' + Date.now() + '.jpg';
@@ -360,9 +429,16 @@
 
     fullscreenBtn.addEventListener('click', () => {
       const url = resultImage.src;
-      if(!url) return;
+      if (!url) return;
       lightboxImage.src = url;
       lightbox.style.display = 'flex';
+    });
+
+    closeLightbox.addEventListener('click', () => {
+      lightbox.style.display = 'none';
+    });
+    lightbox.addEventListener('click', (e) => {
+      if (e.target === lightbox) lightbox.style.display = 'none';
     });
 
     saveToHistoryBtn.addEventListener('click', () => {
@@ -370,13 +446,11 @@
     });
 
     clearHistoryBtn.addEventListener('click', () => {
-      if(confirm('Очистить всю историю генераций?')) {
+      if (confirm('Очистить всю историю генераций?')) {
         history = [];
         saveHistory();
       }
     });
-
-    // Поддержка drag & drop? Необязательно. Оставим базовый функционал.
   })();
   </script>
 </body>
