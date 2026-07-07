@@ -3,535 +3,381 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-  <title>📖 Lustre — арт-журнал</title>
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;700&family=Inter:wght@400;500&display=swap" rel="stylesheet">
+  <title>🜂 Obsidian Dream — NSFW AI Генератор</title>
   <style>
     :root {
-      --bg: #0d0d0f;
-      --surface: #1a1a1f;
-      --gold: #d4af37;
-      --rose: #e0a0b0;
-      --text: #eaeaea;
-      --muted: #999;
-      --radius: 12px;
-      --shadow: 0 10px 30px rgba(0,0,0,0.6);
-      --transition: 0.3s ease;
+      --bg: #0a0a0f;
+      --surface: #12121c;
+      --accent: #b44bff;
+      --accent2: #ff4d7a;
+      --text: #e0e0f0;
+      --muted: #6b6b80;
+      --radius: 16px;
+      --shadow: 0 0 30px rgba(180, 75, 255, 0.3);
     }
     * { margin:0; padding:0; box-sizing:border-box; }
     body {
       background: var(--bg);
       color: var(--text);
-      font-family: 'Inter', sans-serif;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
       min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+    }
+    .app {
+      max-width: 600px;
+      width: 100%;
+      background: var(--surface);
+      border-radius: 24px;
+      padding: 2rem 1.5rem;
+      box-shadow: var(--shadow), 0 8px 24px rgba(0,0,0,0.6);
+      border: 1px solid rgba(255,255,255,0.08);
       display: flex;
       flex-direction: column;
       align-items: center;
-      overflow-x: hidden;
+      gap: 1.5rem;
     }
-    .magazine {
-      max-width: 900px;
-      width: 100%;
-      padding: 1rem;
-    }
-
-    /* Обложка */
-    .cover {
-      text-align: center;
-      padding: 2rem 1rem;
-      border-bottom: 1px solid rgba(255,255,255,0.1);
-      margin-bottom: 2rem;
-    }
-    .cover-title {
-      font-family: 'Playfair Display', serif;
-      font-size: clamp(2.5rem, 8vw, 4.5rem);
+    .logo {
+      font-size: 2.5rem;
       font-weight: 700;
       letter-spacing: 2px;
-      background: linear-gradient(135deg, var(--gold), var(--rose));
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
-      filter: drop-shadow(0 2px 4px rgba(0,0,0,0.6));
-      margin-bottom: 0.5rem;
+      filter: drop-shadow(0 0 8px rgba(180,75,255,0.5));
     }
-    .cover-sub {
-      font-size: 1rem;
-      color: var(--muted);
-      letter-spacing: 3px;
-      text-transform: uppercase;
-    }
-    .cover-featured {
-      width: 100%;
-      max-height: 50vh;
-      object-fit: cover;
-      border-radius: var(--radius);
-      margin: 1.5rem 0;
-      box-shadow: var(--shadow);
-    }
-
-    /* Секции (категории) */
-    .sections-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-      gap: 1rem;
-      margin-bottom: 2rem;
-    }
-    .section-card {
-      background: var(--surface);
-      border-radius: var(--radius);
-      padding: 1.5rem 1rem;
-      text-align: center;
-      cursor: pointer;
-      transition: var(--transition);
-      border: 1px solid transparent;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-    }
-    .section-card:hover {
-      border-color: var(--gold);
-      transform: translateY(-4px);
-      box-shadow: 0 12px 24px rgba(0,0,0,0.5);
-    }
-    .section-icon {
-      font-size: 2.5rem;
-      margin-bottom: 0.5rem;
-    }
-    .section-label {
-      font-weight: 500;
+    .subtitle {
       font-size: 0.9rem;
+      color: var(--muted);
+      margin-top: -0.8rem;
     }
 
-    /* Лента внутри раздела (Masonry) */
-    .gallery {
-      columns: 3 200px;
-      column-gap: 1rem;
-      margin-top: 1rem;
+    .input-group {
+      display: flex;
+      width: 100%;
+      gap: 0.5rem;
     }
-    .gallery-item {
-      break-inside: avoid;
-      margin-bottom: 1rem;
+    .prompt-input {
+      flex: 1;
+      padding: 0.9rem 1.2rem;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 30px;
+      color: white;
+      font-size: 1rem;
+      outline: none;
+      transition: 0.3s;
+    }
+    .prompt-input:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 12px rgba(180,75,255,0.2);
+    }
+    .generate-btn {
+      padding: 0.9rem 1.8rem;
+      background: var(--accent);
+      border: none;
+      border-radius: 30px;
+      color: white;
+      font-weight: 700;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      box-shadow: 0 4px 15px rgba(180,75,255,0.4);
+    }
+    .generate-btn:hover {
+      background: #c56bff;
+      box-shadow: 0 6px 20px rgba(180,75,255,0.6);
+    }
+    .generate-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      box-shadow: none;
+    }
+
+    .result-area {
+      width: 100%;
+      position: relative;
+      min-height: 300px;
+      background: rgba(0,0,0,0.3);
       border-radius: var(--radius);
       overflow: hidden;
-      background: var(--surface);
-      box-shadow: var(--shadow);
-      transition: var(--transition);
-      cursor: pointer;
+      border: 1px dashed rgba(255,255,255,0.15);
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
-    .gallery-item:hover { transform: scale(1.02); }
-    .gallery-item img, .gallery-item video {
+    .result-area img {
       width: 100%;
+      height: auto;
       display: block;
     }
-    .item-caption {
-      padding: 0.5rem;
-      font-size: 0.8rem;
+    .placeholder {
       color: var(--muted);
-    }
-
-    /* Полноэкранный просмотр */
-    .lightbox {
-      position: fixed;
-      top:0; left:0; width:100%; height:100%;
-      background: rgba(0,0,0,0.95);
-      backdrop-filter: blur(10px);
-      z-index: 100;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity 0.4s;
-    }
-    .lightbox.open { opacity:1; pointer-events: auto; }
-    .lightbox-content {
-      max-width: 90vw;
-      max-height: 90vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      position: relative;
-    }
-    .lightbox-content img, .lightbox-content video {
-      max-width: 100%;
-      max-height: 90vh;
-      border-radius: 8px;
-      box-shadow: 0 0 30px rgba(0,0,0,0.8);
-    }
-    .close-lightbox {
-      position: absolute;
-      top: 20px; right: 30px;
-      font-size: 2.5rem;
-      color: white;
-      cursor: pointer;
-      z-index: 10;
-      background: none;
-      border: none;
-    }
-    .lightbox-nav {
-      position: absolute;
-      top: 50%;
-      transform: translateY(-50%);
-      font-size: 3rem;
-      color: white;
-      cursor: pointer;
-      background: rgba(0,0,0,0.5);
-      border-radius: 50%;
-      width: 50px; height: 50px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      user-select: none;
-    }
-    .lightbox-nav.prev { left: 10px; }
-    .lightbox-nav.next { right: 10px; }
-
-    /* Поиск и кнопки */
-    .top-bar {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 1rem;
-    }
-    .search-input {
-      background: var(--surface);
-      border: 1px solid rgba(255,255,255,0.1);
-      padding: 0.6rem 1rem;
-      border-radius: 20px;
-      color: white;
-      font-size: 0.9rem;
-      width: 200px;
-    }
-    .icon-btn {
-      background: var(--surface);
-      border: none;
-      color: var(--text);
-      font-size: 1.2rem;
-      width: 40px;
-      height: 40px;
-      border-radius: 50%;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    .loading {
       text-align: center;
       padding: 2rem;
+    }
+    .loading-spinner {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .spinner {
+      width: 40px;
+      height: 40px;
+      border: 3px solid rgba(255,255,255,0.1);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .action-buttons {
+      display: flex;
+      gap: 0.8rem;
+      margin-top: 0.5rem;
+    }
+    .icon-btn {
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.1);
+      color: var(--text);
+      padding: 0.6rem 1.2rem;
+      border-radius: 20px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      transition: 0.2s;
+    }
+    .icon-btn:hover { background: rgba(255,255,255,0.12); }
+
+    .history {
+      width: 100%;
+      margin-top: 1rem;
+    }
+    .history-title {
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .history-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      max-height: 200px;
+      overflow-y: auto;
+    }
+    .history-thumb {
+      width: 80px;
+      height: 80px;
+      border-radius: 8px;
+      object-fit: cover;
+      cursor: pointer;
+      transition: 0.2s;
+      border: 1px solid transparent;
+    }
+    .history-thumb:hover {
+      border-color: var(--accent);
+      transform: scale(1.05);
+    }
+
+    .clear-btn {
+      background: none;
+      border: none;
       color: var(--muted);
+      cursor: pointer;
+      font-size: 0.8rem;
     }
   </style>
 </head>
 <body>
-<div class="magazine">
-  <!-- Верхняя панель -->
-  <div class="top-bar">
-    <input type="text" class="search-input" placeholder="Поиск..." id="searchInput">
-    <div style="display:flex; gap:0.5rem;">
-      <button class="icon-btn" id="bookmarksBtn">🔖</button>
-      <button class="icon-btn" id="randomCoverBtn">🎲</button>
+  <div class="app">
+    <div class="logo">🜂 Obsidian Dream</div>
+    <div class="subtitle">нейро-генератор NSFW</div>
+
+    <div class="input-group">
+      <input type="text" class="prompt-input" id="promptInput" placeholder="Опишите изображение... например: девушка с тату, неоновый свет, киберпанк" autofocus>
+      <button class="generate-btn" id="generateBtn">✨ Создать</button>
+    </div>
+
+    <div class="result-area" id="resultArea">
+      <div class="placeholder" id="placeholder">Введите запрос и нажмите «Создать»</div>
+      <div class="loading-spinner" id="loadingSpinner" style="display:none;">
+        <div class="spinner"></div>
+        <span>Генерация...</span>
+      </div>
+      <img id="resultImage" src="" alt="Результат" style="display:none;">
+    </div>
+
+    <div class="action-buttons" id="actionButtons" style="display:none;">
+      <button class="icon-btn" id="downloadBtn">⬇️ Скачать</button>
+      <button class="icon-btn" id="fullscreenBtn">🔍 Во весь экран</button>
+      <button class="icon-btn" id="saveToHistoryBtn">💾 В историю</button>
+    </div>
+
+    <div class="history" id="historySection">
+      <div class="history-title">
+        <span>🕒 Недавние генерации</span>
+        <button class="clear-btn" id="clearHistoryBtn">очистить</button>
+      </div>
+      <div class="history-grid" id="historyGrid"></div>
     </div>
   </div>
 
-  <!-- Обложка номера -->
-  <div class="cover" id="coverSection">
-    <div class="cover-title">Lustre</div>
-    <div class="cover-sub">— curated beauty —</div>
-    <img class="cover-featured" id="coverImage" src="" alt="Cover" style="display:none;">
+  <!-- Полноэкранный просмотр -->
+  <div id="lightbox" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.95); z-index:100; align-items:center; justify-content:center;" onclick="this.style.display='none'">
+    <img id="lightboxImage" src="" style="max-width:95vw; max-height:95vh; object-fit:contain; border-radius:8px; box-shadow:0 0 30px rgba(0,0,0,0.8);">
+    <span style="position:absolute; top:20px; right:30px; font-size:2.5rem; color:white; cursor:pointer;" onclick="document.getElementById('lightbox').style.display='none'">&times;</span>
   </div>
 
-  <!-- Разделы -->
-  <div class="sections-grid" id="sectionsGrid">
-    <div class="section-card" data-section="portraits">
-      <div class="section-icon">👤</div>
-      <div class="section-label">Портреты</div>
-    </div>
-    <div class="section-card" data-section="artistic">
-      <div class="section-icon">🎨</div>
-      <div class="section-label">Арт-ню</div>
-    </div>
-    <div class="section-card" data-section="erotica">
-      <div class="section-icon">🌹</div>
-      <div class="section-label">Эротика</div>
-    </div>
-    <div class="section-card" data-section="motion">
-      <div class="section-icon">🎬</div>
-      <div class="section-label">Видео</div>
-    </div>
-    <div class="section-card" data-section="classic">
-      <div class="section-icon">📷</div>
-      <div class="section-label">Классика</div>
-    </div>
-  </div>
+  <script>
+  (() => {
+    const promptInput = document.getElementById('promptInput');
+    const generateBtn = document.getElementById('generateBtn');
+    const resultArea = document.getElementById('resultArea');
+    const placeholder = document.getElementById('placeholder');
+    const loadingSpinner = document.getElementById('loadingSpinner');
+    const resultImage = document.getElementById('resultImage');
+    const actionButtons = document.getElementById('actionButtons');
+    const downloadBtn = document.getElementById('downloadBtn');
+    const fullscreenBtn = document.getElementById('fullscreenBtn');
+    const saveToHistoryBtn = document.getElementById('saveToHistoryBtn');
+    const historyGrid = document.getElementById('historyGrid');
+    const clearHistoryBtn = document.getElementById('clearHistoryBtn');
+    const lightbox = document.getElementById('lightbox');
+    const lightboxImage = document.getElementById('lightboxImage');
 
-  <!-- Галерея (появляется при выборе раздела) -->
-  <div id="galleryContainer" style="display:none;">
-    <button id="backToCover" style="background:none; border:none; color:var(--gold); cursor:pointer; margin-bottom:1rem;">← На обложку</button>
-    <div class="gallery" id="galleryGrid"></div>
-    <div class="loading" id="galleryLoader">Загрузка...</div>
-  </div>
-</div>
+    const HISTORY_KEY = 'obsidian_dream_history';
+    let history = [];
 
-<!-- Лайтбокс -->
-<div class="lightbox" id="lightbox">
-  <button class="close-lightbox" id="closeLightbox">&times;</button>
-  <div class="lightbox-content" id="lightboxContent"></div>
-  <div class="lightbox-nav prev" id="prevBtn">‹</div>
-  <div class="lightbox-nav next" id="nextBtn">›</div>
-</div>
-
-<script>
-(() => {
-  // Разделы и соответствующие сабреддиты
-  const SECTIONS = {
-    portraits: ['gentlemanboners','classysexy','PrettyGirlsNSFW','TotalBabes','BeautifulWomen','Nude_Selfie'],
-    artistic: ['ArtGW','Boudoir','FineArtNudes','ElegantNudes','TheArtOfTheTease','EroticArt'],
-    erotica: ['GoneWild','RealGirls','PetiteGoneWild','AltGirls','gothsluts','onoff','lingerie'],
-    motion: ['60fpsporn','porninfifteenseconds','nsfw_gif','adultgifs','pornvids','cumsluts'],
-    classic: ['gentlemanboners','classysexy','goddesses','TheFemaleForm','ElegantNudes','ArtisticNudes']
-  };
-
-  const BLOCKLIST = /(gore|blood|murder|death|kill|violen|убийств|смерт|насил|труп|femboy|trap|trans|shemale|фембой|транс)/i;
-
-  const state = {
-    seenPosts: new Set(),
-    seenUrls: new Set(),
-    bookmarks: [],
-    likes: {},
-    currentSection: null,
-    galleryPosts: [],
-    lightboxIndex: 0,
-  };
-
-  try {
-    const raw = localStorage.getItem('lustre_state');
-    if(raw) {
-      const s = JSON.parse(raw);
-      state.bookmarks = s.bookmarks || [];
-      state.likes = s.likes || {};
-      if(s.seenPosts) state.seenPosts = new Set(s.seenPosts);
-      if(s.seenUrls) state.seenUrls = new Set(s.seenUrls);
-    }
-  } catch(e){}
-  function saveState() {
-    localStorage.setItem('lustre_state', JSON.stringify({
-      bookmarks: state.bookmarks,
-      likes: state.likes,
-      seenPosts: Array.from(state.seenPosts).slice(-2000),
-      seenUrls: Array.from(state.seenUrls).slice(-2000),
-    }));
-  }
-
-  // JSONP
-  function jsonp(url, cb, timeout=8000) {
-    return new Promise((resolve, reject) => {
-      const bases = ['https://www.reddit.com','https://old.reddit.com'];
-      let attempt = 0;
-      const tryLoad = () => {
-        if(attempt >= bases.length) return reject(new Error('JSONP fail'));
-        const base = bases[attempt];
-        const script = document.createElement('script');
-        const full = base + url + (url.includes('?')?'&':'?')+'jsonp='+cb+'&_='+Date.now();
-        const timer = setTimeout(() => { cleanup(); attempt++; tryLoad(); }, timeout);
-        function cleanup() { clearTimeout(timer); delete window[cb]; if(script.parentNode) script.parentNode.removeChild(script); }
-        window[cb] = (data) => { cleanup(); resolve(data); };
-        script.onerror = () => { cleanup(); attempt++; tryLoad(); };
-        script.src = full;
-        document.head.appendChild(script);
-      };
-      tryLoad();
-    });
-  }
-
-  async function fetchSubredditPosts(sub, limit=10) {
-    const data = await jsonp(`/r/${sub}/hot.json?limit=${limit}`, 'redditCB');
-    return data.data.children;
-  }
-
-  function filterAndMap(post) {
-    const data = post.data;
-    if(!data || data.stickied) return null;
-    if(state.seenPosts.has(data.id) || (data.url && state.seenUrls.has(data.url))) return null;
-    if(BLOCKLIST.test(data.title+' '+data.subreddit)) return null;
-    state.seenPosts.add(data.id);
-    if(data.url) state.seenUrls.add(data.url);
-    let media = { type:'image', url: data.url };
-    if(data.is_video && data.media?.reddit_video?.fallback_url) {
-      media = { type:'video', url: data.media.reddit_video.fallback_url, poster: data.thumbnail };
-    } else if(data.domain === 'redgifs.com') {
-      const m = data.url.match(/\/watch\/([a-zA-Z0-9]+)/);
-      if(m) media = { type:'iframe', url: `https://www.redgifs.com/ifr/${m[1]}` };
-    } else if(data.url?.match(/\.(mp4|webm|mov)$/i) || data.url?.endsWith('.gifv')) {
-      media = { type:'video', url: data.url.replace('.gifv','.mp4') };
-    } else if(data.url?.match(/\.(jpg|jpeg|png|gif|webp)$/i) || data.domain === 'i.redd.it' || data.domain === 'i.imgur.com') {
-      media = { type:'image', url: data.url };
-    } else return null;
-    return { id:data.id, title:data.title, subreddit:data.subreddit, media };
-  }
-
-  // Показ случайной обложки
-  async function loadCoverImage() {
-    const coverImg = document.getElementById('coverImage');
-    coverImg.style.display = 'none';
-    const allSubs = Object.values(SECTIONS).flat();
-    const randomSub = allSubs[Math.floor(Math.random()*allSubs.length)];
+    // Загружаем историю
     try {
-      const posts = await fetchSubredditPosts(randomSub, 5);
-      const processed = posts.map(filterAndMap).filter(Boolean);
-      const imagePost = processed.find(p => p.media.type === 'image');
-      if(imagePost) {
-        coverImg.src = imagePost.media.url;
-        coverImg.style.display = 'block';
-      }
-    } catch(e) {}
-  }
+      const saved = localStorage.getItem(HISTORY_KEY);
+      if(saved) history = JSON.parse(saved);
+    } catch(e) { history = []; }
+    renderHistory();
 
-  // Построение галереи раздела
-  async function loadSection(sectionKey) {
-    state.currentSection = sectionKey;
-    document.getElementById('sectionsGrid').style.display = 'none';
-    document.getElementById('coverSection').style.display = 'none';
-    document.getElementById('galleryContainer').style.display = 'block';
-    const grid = document.getElementById('galleryGrid');
-    grid.innerHTML = '';
-    document.getElementById('galleryLoader').style.display = 'block';
-    const subs = SECTIONS[sectionKey];
-    let allPosts = [];
-    for(const sub of subs) {
-      try {
-        const posts = await fetchSubredditPosts(sub, 6);
-        const filtered = posts.map(filterAndMap).filter(Boolean);
-        allPosts = allPosts.concat(filtered);
-      } catch(e){}
+    // Сохраняем историю
+    function saveHistory() {
+      localStorage.setItem(HISTORY_KEY, JSON.stringify(history));
+      renderHistory();
     }
-    // Перемешиваем
-    allPosts.sort(() => Math.random() - 0.5);
-    state.galleryPosts = allPosts;
-    renderGallery(allPosts);
-    document.getElementById('galleryLoader').style.display = 'none';
-  }
 
-  function renderGallery(posts) {
-    const grid = document.getElementById('galleryGrid');
-    posts.forEach((post, index) => {
-      const item = document.createElement('div');
-      item.className = 'gallery-item';
-      item.dataset.index = index;
-      if(post.media.type === 'image') {
+    function renderHistory() {
+      historyGrid.innerHTML = '';
+      history.slice(0, 20).forEach(item => {
         const img = document.createElement('img');
-        img.src = post.media.url;
-        img.loading = 'lazy';
-        item.appendChild(img);
-      } else if(post.media.type === 'video') {
-        const video = document.createElement('video');
-        video.src = post.media.url;
-        if(post.media.poster) video.poster = post.media.poster;
-        video.muted = true;
-        video.loop = true;
-        video.playsInline = true;
-        video.setAttribute('playsinline', '');
-        video.preload = 'metadata';
-        item.appendChild(video);
-      } else if(post.media.type === 'iframe') {
-        // превью
-        const thumb = document.createElement('img');
-        thumb.src = 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"><rect fill="%23111" width="100" height="100"/><text fill="white" x="50%" y="50%" dominant-baseline="middle" text-anchor="middle">▶</text></svg>';
-        item.appendChild(thumb);
-      }
-      const caption = document.createElement('div');
-      caption.className = 'item-caption';
-      caption.textContent = post.title?.slice(0, 40) || '';
-      item.appendChild(caption);
-      item.addEventListener('click', () => openLightbox(index));
-      grid.appendChild(item);
-    });
-  }
-
-  // Лайтбокс
-  const lightbox = document.getElementById('lightbox');
-  const lightboxContent = document.getElementById('lightboxContent');
-  function openLightbox(index) {
-    state.lightboxIndex = index;
-    lightbox.classList.add('open');
-    showLightboxMedia();
-  }
-  function closeLightbox() {
-    lightbox.classList.remove('open');
-    lightboxContent.innerHTML = '';
-  }
-  function showLightboxMedia() {
-    const post = state.galleryPosts[state.lightboxIndex];
-    if(!post) return;
-    lightboxContent.innerHTML = '';
-    if(post.media.type === 'image') {
-      const img = document.createElement('img');
-      img.src = post.media.url;
-      lightboxContent.appendChild(img);
-    } else if(post.media.type === 'video') {
-      const video = document.createElement('video');
-      video.src = post.media.url;
-      video.controls = true;
-      video.autoplay = true;
-      video.playsInline = true;
-      lightboxContent.appendChild(video);
-    } else if(post.media.type === 'iframe') {
-      const iframe = document.createElement('iframe');
-      iframe.src = post.media.url;
-      iframe.allowFullscreen = true;
-      iframe.style.width = '80vw';
-      iframe.style.height = '80vh';
-      lightboxContent.appendChild(iframe);
+        img.src = item.url;
+        img.title = item.prompt;
+        img.className = 'history-thumb';
+        img.onclick = () => {
+          setResultImage(item.url);
+        };
+        historyGrid.appendChild(img);
+      });
     }
-  }
-  document.getElementById('closeLightbox').addEventListener('click', closeLightbox);
-  document.getElementById('prevBtn').addEventListener('click', () => {
-    if(state.lightboxIndex > 0) {
-      state.lightboxIndex--;
-      showLightboxMedia();
+
+    function setResultImage(url) {
+      resultImage.src = url;
+      resultImage.style.display = 'block';
+      placeholder.style.display = 'none';
+      loadingSpinner.style.display = 'none';
+      actionButtons.style.display = 'flex';
     }
-  });
-  document.getElementById('nextBtn').addEventListener('click', () => {
-    if(state.lightboxIndex < state.galleryPosts.length-1) {
-      state.lightboxIndex++;
-      showLightboxMedia();
-    }
-  });
-  lightbox.addEventListener('click', (e) => {
-    if(e.target === lightbox) closeLightbox();
-  });
 
-  // Навигация
-  document.getElementById('sectionsGrid').addEventListener('click', (e) => {
-    const card = e.target.closest('.section-card');
-    if(card) loadSection(card.dataset.section);
-  });
-  document.getElementById('backToCover').addEventListener('click', () => {
-    document.getElementById('galleryContainer').style.display = 'none';
-    document.getElementById('sectionsGrid').style.display = '';
-    document.getElementById('coverSection').style.display = '';
-    state.currentSection = null;
-  });
+    async function generateImage(prompt) {
+      // Формируем URL для Pollinations.ai
+      const seed = Math.floor(Math.random() * 1000000);
+      const encodedPrompt = encodeURIComponent(prompt + ', highly detailed, realistic, NSFW allowed, erotic, beautiful, artistic');
+      const width = 512;
+      const height = 768;
+      const imageUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=${width}&height=${height}&nologo=true&seed=${seed}`;
 
-  document.getElementById('randomCoverBtn').addEventListener('click', loadCoverImage);
-  document.getElementById('bookmarksBtn').addEventListener('click', () => {
-    alert('Закладки: ' + state.bookmarks.length + ' шт. (просмотр в разработке)');
-  });
+      // Показываем загрузку
+      placeholder.style.display = 'none';
+      resultImage.style.display = 'none';
+      loadingSpinner.style.display = 'flex';
+      actionButtons.style.display = 'none';
 
-  document.getElementById('searchInput').addEventListener('keypress', (e) => {
-    if(e.key === 'Enter') {
-      const query = e.target.value.trim();
-      if(query) {
-        // простой поиск: загружаем раздел "эротика" и фильтруем по названию
-        loadSection('erotica').then(() => {
-          const filtered = state.galleryPosts.filter(p => p.title.toLowerCase().includes(query.toLowerCase()));
-          state.galleryPosts = filtered;
-          document.getElementById('galleryGrid').innerHTML = '';
-          renderGallery(filtered);
+      try {
+        // Ждём загрузки изображения
+        const img = new Image();
+        img.src = imageUrl;
+        await new Promise((resolve, reject) => {
+          img.onload = resolve;
+          img.onerror = reject;
+          setTimeout(() => reject(new Error('Timeout')), 30000);
         });
+
+        setResultImage(imageUrl);
+        // Автоматически добавляем в историю
+        addToHistory(imageUrl, prompt);
+      } catch (e) {
+        alert('Не удалось сгенерировать изображение. Попробуйте другой запрос или повторите позже.');
+        placeholder.style.display = 'block';
+        loadingSpinner.style.display = 'none';
       }
     }
-  });
 
-  // Инициализация
-  loadCoverImage();
-})();
-</script>
+    function addToHistory(url, prompt) {
+      // Не добавляем дубликаты подряд
+      if(history.length > 0 && history[0].url === url) return;
+      history.unshift({ url, prompt, date: Date.now() });
+      // Ограничим историю 50 записями
+      if(history.length > 50) history.pop();
+      saveHistory();
+    }
+
+    generateBtn.addEventListener('click', () => {
+      const prompt = promptInput.value.trim();
+      if(!prompt) {
+        alert('Введите описание изображения.');
+        return;
+      }
+      generateImage(prompt);
+    });
+
+    promptInput.addEventListener('keypress', (e) => {
+      if(e.key === 'Enter') generateBtn.click();
+    });
+
+    downloadBtn.addEventListener('click', () => {
+      const url = resultImage.src;
+      if(!url) return;
+      // Скачивание через ссылку
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'obsidian-dream-' + Date.now() + '.jpg';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    });
+
+    fullscreenBtn.addEventListener('click', () => {
+      const url = resultImage.src;
+      if(!url) return;
+      lightboxImage.src = url;
+      lightbox.style.display = 'flex';
+    });
+
+    saveToHistoryBtn.addEventListener('click', () => {
+      addToHistory(resultImage.src, promptInput.value || 'без названия');
+    });
+
+    clearHistoryBtn.addEventListener('click', () => {
+      if(confirm('Очистить всю историю генераций?')) {
+        history = [];
+        saveHistory();
+      }
+    });
+
+    // Поддержка drag & drop? Необязательно. Оставим базовый функционал.
+  })();
+  </script>
 </body>
 </html>
